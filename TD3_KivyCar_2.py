@@ -5,6 +5,7 @@
 # 2.1 updating max_action to 45 - car doesnot move a lot mostly straight lines
 # 3. updating max
 # 4. other hyperparams: 1. velocity and angle updates when car in road or sand; 2. proper randomisation of actions for building buffer
+# 5. hyperparams for punishing and rewarding the agent
 
 
 # Importing the libraries
