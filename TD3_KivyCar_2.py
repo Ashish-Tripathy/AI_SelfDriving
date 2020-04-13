@@ -4,8 +4,9 @@
 # 2. updating max_action to 5 - car doesnot move a lot mostly straight lines
 # 2.1 updating max_action to 45 - car doesnot move a lot mostly straight lines
 # 3. updating max
-# 4. other yperparams: 1. velocity and angle updates when car in road or sand; 2. proper randomisation of actions for building buffer
-# 
+# 4. other hyperparams: 1. velocity and angle updates when car in road or sand; 2. proper randomisation of actions for building buffer
+
+
 # Importing the libraries
 import numpy as np
 from random import random, randint
@@ -220,12 +221,13 @@ class Game(Widget):
                 self.episode_timesteps = 0
                 self.episode_num += 1
 
-            # Before 10000 timesteps, we play random actions
-            #if total_timesteps < start_timesteps:
-                #action = env.action_space.sample()
-            #   action = random.sample(range(-max_action, +max_action), 1)
+            # Before 10000 timesteps, we play random actions based on uniform distn
+            #if self.total_timesteps < start_timesteps:
+            #   action = [np.random.uniform(-45,45)]
+            #else:
+            ##debug:
             #if self.total_timesteps == 10500:
-             #   print("check")
+            #   print("check")
             #else: # After 10000 timesteps, we switch to the model
             action = brain.select_action(np.array(self.state))
             # If the explore_noise parameter is not 0, we add noise to the action and we clip it
