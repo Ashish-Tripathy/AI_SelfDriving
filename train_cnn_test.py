@@ -52,7 +52,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 30
+max_action = 7
 
 #function to extract car image
 def extract_car(x, y, width, height, angle):
@@ -206,7 +206,7 @@ class Game(Widget):
         #max_timesteps = 5e5 # Total number of iterations/timesteps
         #save_models = True # Boolean checker whether or not to save the pre-trained model
         expl_noise = 0.5 # Exploration noise - STD value of exploration Gaussian noise
-        start_timesteps = 2 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
+        start_timesteps = 10000 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
         batch_size = 30 # Size of the batch
         discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
         tau = 0.005 # Target network update rate
@@ -321,7 +321,8 @@ class Game(Widget):
                 reward = -1
                 self.done = True
             
-            if distance < 45:
+            if distance < 50:
+                reward = 0.2
                 if swap == 1:
                     goal_x = 1420
                     goal_y = 622
@@ -337,25 +338,22 @@ class Game(Widget):
             # We increase the total reward
             self.episode_reward += reward
             
-            #end episode if more time on sand
-                        # We increase the total reward
-            self.episode_reward += reward
-            
 
             # We check if the episode is done
             #if self.episode_timesteps == 1000: #and self.total_timesteps<start_timesteps:
             #   self.done = True
             
-            if self.episode_timesteps == 500 and self.total_timesteps<start_timesteps:
+            if self.episode_timesteps == 100 and self.total_timesteps<start_timesteps:
                 self.done = True
-            if self.episode_timesteps == 5000 and self.total_timesteps>start_timesteps:
+            if self.episode_timesteps == 500 and self.total_timesteps>start_timesteps:
                 self.done = True
             
+            #end episode if more time on sand
             if reward == -2:
                 self.sand_counter +=1
             else:
-                sand_counter = 0
-            if self.sand_counter == 100:
+                self.sand_counter = 0
+            if self.sand_counter == 50:
                 self.done = True           
 
 

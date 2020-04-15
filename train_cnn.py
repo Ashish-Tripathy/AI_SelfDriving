@@ -329,10 +329,10 @@ class Game(Widget):
 
 
             # We check if the episode is done
-            if self.episode_timesteps == 1000 and self.total_timesteps<start_timesteps:
+            if self.episode_timesteps == 100 and self.total_timesteps<start_timesteps:
                 self.done = True
             
-            if self.episode_timesteps == 5000 and self.total_timesteps>start_timesteps:
+            if self.episode_timesteps == 500 and self.total_timesteps>start_timesteps:
                 self.done = True
 
             
