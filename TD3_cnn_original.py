@@ -45,26 +45,26 @@ class Actor(nn.Module):
         super(Actor, self).__init__()
 
         self.encoder = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 16, 3, stride = 2), ##changed to 1 ## output size: [16, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(1, 16, 5, 2, padding=2), ##changed to 1 ## output size: [16, 96, 96] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 32, 3, stride = 2),  ## output size: [32, 19, 19]
+            torch.nn.Conv2d(16, 32, 5, 2, padding=2),  ## output size: [32, 48, 48]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(32, 64, 3, stride=2),  ## output size: [64, 9, 9]
+            torch.nn.Conv2d(32, 64, 5, 2, padding=2),  ## output size: [64, 24, 24]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(64),
-            torch.nn.Conv2d(64, 128, 3, stride=2),  ## output size: [128, 4, 4]
+            torch.nn.Conv2d(64, 128, 5, 4, padding=2),  ## output size: [128, 6, 6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(128),
-            torch.nn.Conv2d(128, 256, 3),  ## output size: [256, 2, 2]
+            torch.nn.Conv2d(128, 256, 5, 2, padding=2),  ## output size: [256, 3, 3]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(256),
-            torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
-            Flatten(),  ## output: 512
+            torch.nn.Conv2d(256, 512, 5, 2, padding=2),  ## output size: [512, 2, 2]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(512),
+            torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            Flatten(),  ## output: 1024
         ])
 
         self.linear = torch.nn.ModuleList([
@@ -96,26 +96,26 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
 
         self.encoder_1 = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 16, 3, stride = 2), ##changed to 1 ## output size: [16, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(state_dim, 16, 5, 2, padding=2),  ## output size: [16, 96, 96] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 32, 3, stride = 2),  ## output size: [32, 19, 19]
+            torch.nn.Conv2d(16, 32, 5, 2, padding=2),  ## output size: [32, 48, 48]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(32, 64, 3, stride=2),  ## output size: [64, 9, 9]
+            torch.nn.Conv2d(32, 64, 5, 2, padding=2),  ## output size: [64, 24, 24]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(64),
-            torch.nn.Conv2d(64, 128, 3, stride=2),  ## output size: [128, 4, 4]
+            torch.nn.Conv2d(64, 128, 5, 4, padding=2),  ## output size: [128, 6, 6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(128),
-            torch.nn.Conv2d(128, 256, 3),  ## output size: [256, 2, 2]
+            torch.nn.Conv2d(128, 256, 5, 2, padding=2),  ## output size: [256, 3, 3]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(256),
-            torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
-            Flatten(),  ## output: 512
+            torch.nn.Conv2d(256, 512, 5, 2, padding=2),  ## output size: [512, 2, 2]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(512),
+            torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            Flatten(),  ## output: 1024
         ])
 
         self.linear_1 = torch.nn.ModuleList([
@@ -125,26 +125,26 @@ class Critic(nn.Module):
         ])
 
         self.encoder_2 = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 16, 3, stride = 2), ##changed to 1 ## output size: [16, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(state_dim, 16, 5, 2, padding=2),  ## output size: [16, 96, 96] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 32, 3, stride = 2),  ## output size: [32, 19, 19]
+            torch.nn.Conv2d(16, 32, 5, 2, padding=2),  ## output size: [32, 48, 48]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(32),
-            torch.nn.Conv2d(32, 64, 3, stride=2),  ## output size: [64, 9, 9]
+            torch.nn.Conv2d(32, 64, 5, 2, padding=2),  ## output size: [64, 24, 24]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(64),
-            torch.nn.Conv2d(64, 128, 3, stride=2),  ## output size: [128, 4, 4]
+            torch.nn.Conv2d(64, 128, 5, 4, padding=2),  ## output size: [128, 6, 6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(128),
-            torch.nn.Conv2d(128, 256, 3),  ## output size: [256, 2, 2]
+            torch.nn.Conv2d(128, 256, 5, 2, padding=2),  ## output size: [256, 3, 3]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(256),
-            torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
-            Flatten(),  ## output: 512
+            torch.nn.Conv2d(256, 512, 5, 2, padding=2),  ## output size: [512, 2, 2]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(512),
+            torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            Flatten(),  ## output: 1024
         ])
 
         self.linear_2 = torch.nn.ModuleList([
@@ -154,11 +154,10 @@ class Critic(nn.Module):
         ])
 
     def forward(self, x, u):
-        #print("entered critic")
+
         x1 = x
         for layer in self.encoder_1:
             x1 = layer(x1)
-         #   print(x1.size())
         counter = 0
         for layer in self.linear_1:
             counter += 1
@@ -213,7 +212,7 @@ class TD3(object):
         
     def select_action(self, state):
         #state = torch.Tensor(state.reshape(1, -1)).to(device)
-        state = torch.Tensor(state).unsqueeze(0).to(device) #add batch info
+        state = torch.Tensor(state).to(device)
         return self.actor(state).cpu().data.numpy().flatten()
 
     def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
@@ -227,7 +226,7 @@ class TD3(object):
             action = torch.Tensor(batch_actions).to(device)
             reward = torch.Tensor(batch_rewards).to(device)
             done = torch.Tensor(batch_dones).to(device)
-            #print("iteration: ", it)
+            
             # Step 5: From the next state s’, the Actor target plays the next action a’
             next_action = self.actor_target(next_state)
             

@@ -20,6 +20,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import deque
+import time
 
 
 # Importing the Kivy packages
@@ -51,7 +52,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 45
+max_action = 30
 
 #function to extract car image
 def extract_car(x, y, width, height, angle):
@@ -65,9 +66,9 @@ def extract_car(x, y, width, height, angle):
 
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
 #brain = Dqn(5,3,0.9)
-state_dim = 192
+state_dim = 80
 action_dim = 1
-latent_dim = 1024
+latent_dim = 512
 brain = TD3(state_dim,action_dim,max_action,latent_dim)
 replay_buffer = ReplayBuffer()
 last_reward = 0
@@ -145,15 +146,15 @@ class Car(Widget):
         draw.polygon([tuple(p) for p in extract_car_area], fill=0)
 
         sand1 = np.asarray(img_tmp)
-        cropped_img = sand1[int(a[0])-96:int(a[0])+96, int(a[1])-96:int(a[1])+96]
+        cropped_img = sand1[int(a[0])-40:int(a[0])+40, int(a[1])-40:int(a[1])+40] #80x80 images
         camera_data = np.asarray(cropped_img)        
-        camera_data = np.expand_dims(camera_data, axis=0)
+        camera_data = np.expand_dims(camera_data, axis=0) #add channel data
         #print("Croped Height:", camera_data.shape[0], "Croped Width:", camera_data.shape[1], "Croped Dimension:", camera_data.shape[2])
-        print("from function: ",torch.FloatTensor(camera_data))
+        #print("from function: ",torch.FloatTensor(camera_data))
         #torch.FloatTensor(camera_data)
-        camera_data = torch.from_numpy(camera_data).float().div(255) # chw , FloatTensor type,[0,1]
-        camera_data = camera_data.unsqueeze(0)
-        print("from function: ",camera_data)
+        camera_data = torch.from_numpy(camera_data).float().div(255) # normalise the image , FloatTensor type
+        #camera_data = camera_data.unsqueeze(0) #batch info
+        #print("from function: ",camera_data)
         return camera_data
 
 class Ball1(Widget):
@@ -182,6 +183,7 @@ class Game(Widget):
     state = torch.zeros([1,1,state_dim,state_dim]) #shape of the cropped car image
     episode_reward = 0
     episode_timesteps = 0
+    sand_counter = 0
     def serve_car(self):
         self.car.center = self.center
         self.car.velocity = Vector(6, 0)
@@ -204,7 +206,7 @@ class Game(Widget):
         #max_timesteps = 5e5 # Total number of iterations/timesteps
         #save_models = True # Boolean checker whether or not to save the pre-trained model
         expl_noise = 0.5 # Exploration noise - STD value of exploration Gaussian noise
-        start_timesteps = 1e4 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
+        start_timesteps = 2 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
         batch_size = 30 # Size of the batch
         discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
         tau = 0.005 # Target network update rate
@@ -233,12 +235,15 @@ class Game(Widget):
                 if self.total_timesteps != 0:
                     print("Total Timesteps: {} Episode Num: {} Reward: {}".format(self.total_timesteps,self.episode_num, self.episode_reward))
                 if self.total_timesteps > start_timesteps:
+                    print("I am training for steps: ", self.episode_timesteps)
+                    start_time = time.time()
                     brain.train(replay_buffer, self.episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
+                    print("time in minutes: ", round((time.time() - start_time)/60))
                 #reset set state dimenssion elements once episode is done
                 self.car.center = self.center
                 #update car position
-                self.car.x = self.car.x + np.random.normal(50,100)
-                #self.car.y = self.car.y + np.random.normal(50,100)
+                self.car.x = self.car.x + np.random.normal(20,40)
+                self.car.y = self.car.y + np.random.normal(20,40)
                 self.car.velocity = Vector(6, 0)
                 xx = goal_x - self.car.x
                 yy = goal_y - self.car.y
@@ -250,10 +255,11 @@ class Game(Widget):
                 #print("Croped Height:", self.car.camera_data.shape[0], "Croped Width:", self.car.camera_data.shape[1], "Croped Dimension:", camera_data.shape[2])
                 #print(self.car.camera)
                 #self.state = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
-                self.state = self.car.move(0)
-                print("from update: ",self.state)
-                print(self.state.size())
-                print(orientation)
+                #initialise 1st state after done, move it towards orientaation
+                self.state = self.car.move(orientation)
+                #print("from update: ",self.state)
+                #print(self.state.size())
+                #print(orientation)
                 # Set the Done to False
                 self.done = False
 
@@ -261,6 +267,7 @@ class Game(Widget):
                 self.episode_reward = 0
                 self.episode_timesteps = 0
                 self.episode_num += 1
+                self.sand_counter = 0
 
             # Before 10000 timesteps, we play random actions based on uniform distn
             #if self.total_timesteps < start_timesteps:
@@ -274,7 +281,7 @@ class Game(Widget):
             # If the explore_noise parameter is not 0, we add noise to the action and we clip it
             print("earlier action:", action)
             if expl_noise != 0:
-                action = (action + np.random.normal(0, 0.1)).clip(-max_action, max_action)
+                action = (action + np.random.normal(0, 1)).clip(-max_action, max_action)
 
             print("noise action:", action)
             # The agent performs the action in the environment, then reaches the next state and receives the reward
@@ -296,7 +303,7 @@ class Game(Widget):
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
                 print("Total Timesteps: {} Episode Num: {} Reward: {}".format(self.total_timesteps, self.episode_num, self.episode_reward))
                 print("sand: ", 1,"distance: ", distance, int(self.car.x),int(self.car.y), im.read_pixel(int(self.car.x),int(self.car.y)))
-                reward = -1
+                reward = -2
                 self.done = False
             
             else: # otherwise
@@ -310,11 +317,11 @@ class Game(Widget):
                 # else:
                 #     last_reward = last_reward +(-0.2)
 
-            if (self.car.x < 5) or (self.car.x > self.width - 5) or (self.car.y < 5) or (self.car.y > self.height - 5):
+            if (self.car.x < 41) or (self.car.x > self.width - 41) or (self.car.y < 41) or (self.car.y > self.height - 41): #crude way to handle model failing near boundaries
                 reward = -1
                 self.done = True
             
-            if distance < 25:
+            if distance < 45:
                 if swap == 1:
                     goal_x = 1420
                     goal_y = 622
@@ -326,19 +333,31 @@ class Game(Widget):
                     swap = 1
                     #self.done = True
             last_distance = distance
-
-
-            # We check if the episode is done
-            if self.episode_timesteps == 1000 and self.total_timesteps<start_timesteps:
-                self.done = True
             
-            if self.episode_timesteps == 5000 and self.total_timesteps>start_timesteps:
-                self.done = True
-
-            
-
             # We increase the total reward
             self.episode_reward += reward
+            
+            #end episode if more time on sand
+                        # We increase the total reward
+            self.episode_reward += reward
+            
+
+            # We check if the episode is done
+            #if self.episode_timesteps == 1000: #and self.total_timesteps<start_timesteps:
+            #   self.done = True
+            
+            if self.episode_timesteps == 500 and self.total_timesteps<start_timesteps:
+                self.done = True
+            if self.episode_timesteps == 5000 and self.total_timesteps>start_timesteps:
+                self.done = True
+            
+            if reward == -2:
+                self.sand_counter +=1
+            else:
+                sand_counter = 0
+            if self.sand_counter == 100:
+                self.done = True           
+
 
             # We store the new transition into the Experience Replay memory (ReplayBuffer)
             replay_buffer.add((self.state, new_state, action, reward, self.done))
