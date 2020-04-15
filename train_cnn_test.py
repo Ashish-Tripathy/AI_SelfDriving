@@ -21,6 +21,11 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 from collections import deque
 import time
+import random
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+import numpy as np
+
 
 
 # Importing the Kivy packages
@@ -52,7 +57,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 7
+max_action = 3
 
 #function to extract car image
 def extract_car(x, y, width, height, angle):
@@ -155,6 +160,10 @@ class Car(Widget):
         camera_data = torch.from_numpy(camera_data).float().div(255) # normalise the image , FloatTensor type
         #camera_data = camera_data.unsqueeze(0) #batch info
         #print("from function: ",camera_data)
+        #tens = camera_data.squeeze(2)
+        #tens = camera_data.view(camera_data.shape[1], camera_data.shape[2])
+        #plt.imshow(tens)
+        #plt.show()
         return camera_data
 
 class Ball1(Widget):
@@ -180,7 +189,7 @@ class Game(Widget):
     done = True
     t0 = time.time()
     max_timesteps = 500000
-    state = torch.zeros([1,1,state_dim,state_dim]) #shape of the cropped car image
+    state = torch.zeros([1,state_dim,state_dim]) #shape of the cropped car image
     episode_reward = 0
     episode_timesteps = 0
     sand_counter = 0
@@ -206,7 +215,7 @@ class Game(Widget):
         #max_timesteps = 5e5 # Total number of iterations/timesteps
         #save_models = True # Boolean checker whether or not to save the pre-trained model
         expl_noise = 0.5 # Exploration noise - STD value of exploration Gaussian noise
-        start_timesteps = 10000 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
+        start_timesteps = 1000 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
         batch_size = 30 # Size of the batch
         discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
         tau = 0.005 # Target network update rate
@@ -242,21 +251,18 @@ class Game(Widget):
                 #reset set state dimenssion elements once episode is done
                 self.car.center = self.center
                 #update car position
-                self.car.x = self.car.x + np.random.normal(20,40)
-                self.car.y = self.car.y + np.random.normal(20,40)
+                #self.car.x = self.car.x + np.random.normal(20,40)
+                #self.car.y = self.car.y + np.random.normal(20,40)
                 self.car.velocity = Vector(6, 0)
                 xx = goal_x - self.car.x
                 yy = goal_y - self.car.y
                 orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
 
-                # When the training step is done, we reset the state of the environment
-                #self.state = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
-                #self.car.move(0)#to get the image of the car, i am calling move function
-                #print("Croped Height:", self.car.camera_data.shape[0], "Croped Width:", self.car.camera_data.shape[1], "Croped Dimension:", camera_data.shape[2])
-                #print(self.car.camera)
-                #self.state = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
                 #initialise 1st state after done, move it towards orientaation
-                self.state = self.car.move(orientation)
+                
+                self.state = self.car.move(random.choice((-orientation,orientation)))
+                #or self.state = self.car.move(0)
+
                 #print("from update: ",self.state)
                 #print(self.state.size())
                 #print(orientation)
@@ -281,7 +287,7 @@ class Game(Widget):
             # If the explore_noise parameter is not 0, we add noise to the action and we clip it
             print("earlier action:", action)
             if expl_noise != 0:
-                action = (action + np.random.normal(0, 1)).clip(-max_action, max_action)
+                action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
 
             print("noise action:", action)
             # The agent performs the action in the environment, then reaches the next state and receives the reward
@@ -303,7 +309,7 @@ class Game(Widget):
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
                 print("Total Timesteps: {} Episode Num: {} Reward: {}".format(self.total_timesteps, self.episode_num, self.episode_reward))
                 print("sand: ", 1,"distance: ", distance, int(self.car.x),int(self.car.y), im.read_pixel(int(self.car.x),int(self.car.y)))
-                reward = -2
+                reward = -1
                 self.done = False
             
             else: # otherwise
@@ -343,23 +349,23 @@ class Game(Widget):
             #if self.episode_timesteps == 1000: #and self.total_timesteps<start_timesteps:
             #   self.done = True
             
-            if self.episode_timesteps == 100 and self.total_timesteps<start_timesteps:
+            if self.episode_timesteps == 1000 and self.total_timesteps<start_timesteps:
                 self.done = True
-            if self.episode_timesteps == 500 and self.total_timesteps>start_timesteps:
+            if self.episode_timesteps == 5000 and self.total_timesteps>start_timesteps:
                 self.done = True
             
             #end episode if more time on sand
-            if reward == -2:
+            if reward == -1:
                 self.sand_counter +=1
             else:
                 self.sand_counter = 0
-            if self.sand_counter == 50:
+            if self.sand_counter == 500:
                 self.done = True           
 
 
             # We store the new transition into the Experience Replay memory (ReplayBuffer)
             replay_buffer.add((self.state, new_state, action, reward, self.done))
-            print(self.state, new_state, action, reward, self.done)
+            #print(self.state, new_state, action, reward, self.done)
             self.state = new_state
             # We update the state, the episode timestep, the total timesteps, and the timesteps since the evaluation of the policy
             #new_state = 
@@ -430,7 +436,7 @@ class CarApp(App):
 
     def save(self, obj):
         print("saving brain...")
-        brain.save()
+        brain.save("",)
         plt.plot(scores)
         plt.show()
 
