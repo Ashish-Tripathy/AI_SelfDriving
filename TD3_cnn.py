@@ -21,16 +21,18 @@ class ReplayBuffer(object):
 
     def sample(self, batch_size):
         ind = np.random.randint(0, len(self.storage), size=batch_size)
-        batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = [], [], [], [], []
+        batch_states, batch_next_states, batch_orientation, batch_next_orientation, batch_actions, batch_rewards, batch_dones = [], [], [], [], [], [], []
         for i in ind: 
-            state, next_state, action, reward, done = self.storage[i]
+            state, next_state, orientation, next_orientation, action, reward, done = self.storage[i]
             #state, next_state, action, reward = self.storage[i]
             batch_states.append(np.array(state, copy=False))
             batch_next_states.append(np.array(next_state, copy=False))
+            batch_orientation.append(np.array(orientation, copy=False))
+            batch_next_orientation.append(np.array(next_orientation, copy=False))
             batch_actions.append(np.array(action, copy=False))
             batch_rewards.append(np.array(reward, copy=False))
             batch_dones.append(np.array(done, copy=False))
-        return np.array(batch_states), np.array(batch_next_states), np.array(batch_actions), np.array(batch_rewards).reshape(-1, 1), np.array(batch_dones).reshape(-1, 1)
+        return np.array(batch_states), np.array(batch_next_states),np.array(batch_orientation), np.array(batch_next_orientation), np.array(batch_actions), np.array(batch_rewards).reshape(-1, 1), np.array(batch_dones).reshape(-1, 1)
 
 
 # TD3(1, 1, 10, 1024)
@@ -50,20 +52,28 @@ class Actor(nn.Module):
             torch.nn.BatchNorm2d(8),
             torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
+            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[18,18,16]    
-            torch.nn.Conv2d(16, 8, 3),  ## output size: [8, 16,16]
+            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.MaxPool2d(2,2),    ##[8,8,8]
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 6, 6]
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8), 
+            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),   
+            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 6),  ## output size: [64, 7, 7]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(16),
-            
-
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8),
+            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
+            torch.nn.BatchNorm2d(4),
             #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
             #torch.nn.ReLU(),
             #torch.nn.BatchNorm2d(128),
@@ -114,20 +124,28 @@ class Critic(nn.Module):
             torch.nn.BatchNorm2d(8),
             torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
+            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[18,18,16]    
-            torch.nn.Conv2d(16, 8, 3),  ## output size: [8, 16,16]
+            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.MaxPool2d(2,2),    ##[8,8,8]
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 6, 6]
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8), 
+            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),   
+            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 6),  ## output size: [64, 7, 7]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(16),
-            
-
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8),
+            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
+            torch.nn.BatchNorm2d(4),
             #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
             #torch.nn.ReLU(),
             #torch.nn.BatchNorm2d(128),
@@ -155,20 +173,28 @@ class Critic(nn.Module):
             torch.nn.BatchNorm2d(8),
             torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
+            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[18,18,16]    
-            torch.nn.Conv2d(16, 8, 3),  ## output size: [8, 16,16]
+            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.MaxPool2d(2,2),    ##[8,8,8]
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 6, 6]
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8), 
+            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),   
+            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
+            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 6),  ## output size: [64, 7, 7]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(16),
-            
-
+            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(8),
+            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
+            torch.nn.BatchNorm2d(4),
             #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
             #torch.nn.ReLU(),
             #torch.nn.BatchNorm2d(128),
@@ -180,14 +206,6 @@ class Critic(nn.Module):
             #torch.nn.BatchNorm2d(512),
             #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
             Flatten(),  ## output: 512
-        ])
-
-        self.linear_2 = torch.nn.ModuleList([
-            torch.nn.Linear(latent_dim+action_dim, 16),
-            #torch.nn.ReLU(),
-            torch.nn.Linear(16, 8),
-            torch.nn.Linear(8,1),
-            
         ])
 
     def forward(self, x, u):
@@ -240,6 +258,7 @@ class TD3(object):
 
     def __init__(self, state_dim, action_dim, max_action, latent_dim):
         self.actor = Actor(state_dim, action_dim, max_action, latent_dim).to(device)
+        print(self.actor)
         self.actor_target = Actor(state_dim, action_dim, max_action, latent_dim).to(device)
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
@@ -249,25 +268,27 @@ class TD3(object):
         self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
         self.max_action = max_action
         
-    def select_action(self, state):
-        #state = torch.Tensor(state.reshape(1, -1)).to(device)
-        state = torch.Tensor(state).unsqueeze(0).to(device) #add batch info
-        return self.actor(state).cpu().data.numpy().flatten()
+    def select_action(self, state, orientation):
+        state = state.unsqueeze(0).to(device) #add batch info
+        orientation = torch.Tensor(orientation).unsqueeze(0).to(device) #add batch info
+        return self.actor(state, orientation).cpu().data.numpy().flatten()
 
     def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
         
         for it in range(iterations):
                 
             # Step 4: We sample a batch of transitions (s, s’, a, r) from the memory
-            batch_states, batch_next_states, batch_actions, batch_rewards, batch_dones = replay_buffer.sample(batch_size)
+            batch_states, batch_next_states, batch_orientation, batch_next_orientation, batch_actions, batch_rewards, batch_dones = replay_buffer.sample(batch_size)
             state = torch.Tensor(batch_states).to(device)
             next_state = torch.Tensor(batch_next_states).to(device)
+            orientation = torch.Tensor(batch_orientation).to(device)
+            next_orientation = torch.Tensor(batch_next_orientation).to(device)
             action = torch.Tensor(batch_actions).to(device)
             reward = torch.Tensor(batch_rewards).to(device)
             done = torch.Tensor(batch_dones).to(device)
             #print("iteration: ", it)
             # Step 5: From the next state s’, the Actor target plays the next action a’
-            next_action = self.actor_target(next_state)
+            next_action = self.actor_target(next_state, next_orientation)
             
             # Step 6: We add Gaussian noise to this next action a’ and we clamp it in a range of values supported by the environment
             noise = torch.Tensor(batch_actions).data.normal_(0, policy_noise).to(device)
@@ -275,7 +296,7 @@ class TD3(object):
             next_action = (next_action + noise).clamp(-self.max_action, self.max_action)
             
             # Step 7: The two Critic targets take each the couple (s’, a’) as input and return two Q-values Qt1(s’,a’) and Qt2(s’,a’) as outputs
-            target_Q1, target_Q2 = self.critic_target(next_state, next_action)
+            target_Q1, target_Q2 = self.critic_target(next_state, next_orientation, next_action)
             
             # Step 8: We keep the minimum of these two Q-values: min(Qt1, Qt2)
             target_Q = torch.min(target_Q1, target_Q2)
@@ -284,7 +305,7 @@ class TD3(object):
             target_Q = reward + ((1 - done) * discount * target_Q).detach()
             
             # Step 10: The two Critic models take each the couple (s, a) as input and return two Q-values Q1(s,a) and Q2(s,a) as outputs
-            current_Q1, current_Q2 = self.critic(state, action)
+            current_Q1, current_Q2 = self.critic(state, orientation, action)
             
             # Step 11: We compute the loss coming from the two Critic models: Critic Loss = MSE_Loss(Q1(s,a), Qt) + MSE_Loss(Q2(s,a), Qt)
             critic_loss = F.mse_loss(current_Q1, target_Q) + F.mse_loss(current_Q2, target_Q)
@@ -296,7 +317,7 @@ class TD3(object):
             
             # Step 13: Once every two iterations, we update our Actor model by performing gradient ascent on the output of the first Critic model
             if it % policy_freq == 0:
-                actor_loss = -self.critic.Q1(state, self.actor(state)).mean()
+                actor_loss = -self.critic.Q1(state, orientation, self.actor(state, orientation)).mean()
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
                 self.actor_optimizer.step()
