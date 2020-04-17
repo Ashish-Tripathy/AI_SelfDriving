@@ -46,6 +46,10 @@ from PIL import ImageDraw
 # Importing the Dqn object from our AI in ai.py
 #rom ai import Dqn
 from TD3_cnn import TD3, ReplayBuffer
+import cv2
+from scipy import ndimage
+from PIL import Image
+import scipy
 
 # Adding this line if we don't want the right click to put a red point
 Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
@@ -59,7 +63,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 10
+max_action = 45
 
 #function to extract car image
 def extract_car(x, y, width, height, angle):
@@ -71,6 +75,26 @@ def extract_car(x, y, width, height, angle):
         cropped_car = np.dot(car_, R) + car_offset
         return cropped_car
 
+def get_target_image(img, angle, center, size, fill_with = 255):
+    angle = angle + 90
+    center[0] -= 0
+    img = np.pad(img, size, 'constant', constant_values = fill_with)
+    init_size = 1.6*size
+    #print(img.shape)
+    center[0] += size
+    center[1] += size
+    #print(int(center[0]-(init_size/2)) , int(center[1]-(init_size/2)),int(center[0]+(init_size/2)) , int(center[1]+(init_size/2)))
+    cropped = img[int(center[0]-(init_size/2)) : int(center[0]+(init_size/2)) ,int(center[1]-(init_size/2)): int(center[1]+(init_size/2))]
+    #return cropped
+    rotated = ndimage.rotate(cropped, angle, reshape = False, cval = 255.0)
+    y,x = rotated.shape
+    final = rotated[int(y/2-(size/2)):int(y/2+(size/2)),int(x/2-(size/2)):int(x/2+(size/2))]
+    final = torch.from_numpy(np.array(final)).float().div(255)
+    final = final.unsqueeze(0)
+    #print(rotated.shape)
+    return final#cropped, rotated, 
+
+
 # Getting our AI, which we call "brain", and that contains our neural network that represents our Q-function
 #brain = Dqn(5,3,0.9)
 state_dim = 80
@@ -81,6 +105,7 @@ replay_buffer = ReplayBuffer()
 last_reward = 0
 scores = []
 im = CoreImage("./images/MASK1.png")
+mask = cv2.imread('./images/mask.png',0)
 
 
 # Initializing the map
@@ -93,7 +118,7 @@ def init():
     sand = np.zeros((longueur,largeur))
     img = PILImage.open("./images/mask.png").convert('L')
     sand = np.asarray(img)/255
-    sand = np.pad(sand, 160, 'constant', constant_values = 1)
+    #sand = np.pad(sand, 160, 'constant', constant_values = 1)
     goal_x = 1420
     goal_y = 622
     first_update = False
@@ -146,32 +171,32 @@ class Car(Widget):
             self.signal2 = 10.
         if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
             self.signal3 = 10.
-        #self.pos = Vector(20,18)+self.center
-        self.dummycar = Vector(0, 0).rotate(self.angle) + self.pos
-        a = self.dummycar
-        #print(a)               
-        img_tmp = PILImage.fromarray(sand.astype("uint8")*255)        
-        draw = ImageDraw.Draw(img_tmp)
-        extract_car_area = extract_car(x=int(a[1]+160), y=int(a[0]+160), width=10, height=20, angle = self.angle)
-        draw.polygon([tuple(p) for p in extract_car_area], fill=0)
+        # #self.pos = Vector(20,18)+self.center
+        # self.dummycar = Vector(0, 0).rotate(self.angle) + self.pos
+        # a = self.dummycar
+        # #print(a)               
+        # img_tmp = PILImage.fromarray(sand.astype("uint8")*255)        
+        # draw = ImageDraw.Draw(img_tmp)
+        # extract_car_area = extract_car(x=int(a[1]+160), y=int(a[0]+160), width=10, height=20, angle = self.angle)
+        # draw.polygon([tuple(p) for p in extract_car_area], fill=0)
 
-        sand1 = np.asarray(img_tmp)
-        cropped_img = sand1[int(a[0])-80:int(a[0])+80, int(a[1])-80:int(a[1])+80] #80x80 images
-        camera_data = np.asarray(cropped_img)  
-        #plt.imshow(sand1)
-        #plt.show()
-        #print(sand1.shape)      
-        camera_data = np.expand_dims(camera_data, axis=0) #add channel data
-        camera_data = torch.from_numpy(camera_data).float().div(255) # normalise the image , FloatTensor type
-        camera_data = camera_data.unsqueeze(0)
-        #print(camera_data.size())
-        camera_data = F.interpolate(camera_data,size=(80,80))
-        #print(camera_data.size())
-        #tens = camera_data.view(camera_data.shape[2], camera_data.shape[3])
-        #plt.imshow(tens)
-        #plt.show()
-        #print(camera_data.size())
-        return camera_data.squeeze(0)
+        # sand1 = np.asarray(img_tmp)
+        # cropped_img = sand1[int(a[0])-80:int(a[0])+80, int(a[1])-80:int(a[1])+80] #80x80 images
+        # camera_data = np.asarray(cropped_img)  
+        # #plt.imshow(sand1)
+        # #plt.show()
+        # #print(sand1.shape)      
+        # camera_data = np.expand_dims(camera_data, axis=0) #add channel data
+        # camera_data = torch.from_numpy(camera_data).float().div(255) # normalise the image , FloatTensor type
+        # camera_data = camera_data.unsqueeze(0)
+        # #print(camera_data.size())
+        # camera_data = F.interpolate(camera_data,size=(80,80))
+        # #print(camera_data.size())
+        # #tens = camera_data.view(camera_data.shape[2], camera_data.shape[3])
+        # #plt.imshow(tens)
+        # #plt.show()
+        # #print(camera_data.size())
+        # return camera_data.squeeze(0)
 
 class Ball1(Widget):
     pass
@@ -222,7 +247,7 @@ class Game(Widget):
         #max_timesteps = 5e5 # Total number of iterations/timesteps
         #save_models = True # Boolean checker whether or not to save the pre-trained model
         expl_noise = 0.1 # Exploration noise - STD value of exploration Gaussian noise
-        start_timesteps = 1000 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
+        start_timesteps = 100 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
         batch_size = 30 # Size of the batch
         discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
         tau = 0.005 # Target network update rate
@@ -238,7 +263,8 @@ class Game(Widget):
         longueur = self.width
         largeur = self.height
         #state = np.zeros(5)
-        
+        sand_time = []
+
         if first_update:
             init()
 
@@ -250,8 +276,14 @@ class Game(Widget):
                 # If we are not at the very beginning, we start the training process of the model
                 if self.total_timesteps != 0:
                     #print("Total Timesteps: {} Episode Num: {} Reward: {}".format(self.total_timesteps,self.episode_num, self.episode_reward))
-                    print("Total Timesteps: ", self.total_timesteps, "Episode: ",\
-                    self.episode_num, "Episode Reward: ", self.episode_reward, "Episode timesteps: ", self.episode_timesteps)
+                    distance_travelled = np.sqrt((self.car.x - 715)**2 + (self.car.y - 360)**2)
+                    distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
+                    #c = np.amax(sand_time)
+                    print("Steps: ", self.total_timesteps, "Episode: ",\
+                    self.episode_num, "Reward: ", self.episode_reward,\
+                            "Ep Steps: ", self.episode_timesteps,\
+                                "Distance covered: ", distance_travelled, "Distance left: ", distance)#, "max sand step: ", c)
+                                
             
                 if self.total_timesteps > start_timesteps:
                     print("I am training for steps: ", self.episode_timesteps)
@@ -263,14 +295,20 @@ class Game(Widget):
                 #update car position
                 self.car.x = 715#self.car.x + np.random.normal(20,40)
                 self.car.y = 360#self.car.y + np.random.normal(20,40)
-                self.car.velocity = Vector(6, 0)
+                self.car.velocity = Vector(4, 0)
                 xx = goal_x - self.car.x
                 yy = goal_y - self.car.y
                 orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
+                orientation = [orientation, -orientation]
 
                 #initialise 1st state after done, move it towards orientaation
                 self.car.angle = 0
-                self.state = self.car.move(0)
+                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], 80)
+                #print(self.state.size())
+                #print(self.state)
+                #tens = self.state.view(self.state.shape[1], self.state.shape[2])
+                #plt.imshow(tens)
+                #plt.show()
                 #or self.state = self.car.move(0)
 
                 #print("from update: ",self.state)
@@ -286,34 +324,39 @@ class Game(Widget):
                 self.sand_counter = 0
 
             # Before 10000 timesteps, we play random actions based on uniform distn
-            #if self.total_timesteps < start_timesteps:
-            #   action = [np.random.uniform(-45,45)]
-            #else:
+            if self.total_timesteps < start_timesteps:
+                action = [np.random.uniform(-max_action, max_action)]
+            else:
             ##debug:
             #if self.total_timesteps == 10500:
             #   print("check")
             #else: # After 10000 timesteps, we switch to the model
-            action = brain.select_action(self.state)
+                action = brain.select_action(self.state, np.array(orientation))
             # If the explore_noise parameter is not 0, we add noise to the action and we clip it
             #print("earlier action:", action)
-            if expl_noise != 0:
-                action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
+                if expl_noise != 0:
+                    action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
 
             #print("noise action:", action)
             # The agent performs the action in the environment, then reaches the next state and receives the reward
-            new_state = self.car.move(action[0])
-            
+            self.car.move(action[0])
+            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], 80)
+            #tens = new_state.view(self.state.shape[1], self.state.shape[2])
+            #plt.imshow(tens)
+            #plt.show()
             
             #set new_state dimenssion elements
             xx = goal_x - self.car.x
             yy = goal_y - self.car.y
-            orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
+            next_orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
+            next_orientation = [next_orientation, -next_orientation]
             #new_state = [self.car.signal1, self.car.signal2, self.car.signal3, orientation, -orientation]
             distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
             self.ball1.pos = self.car.sensor1
             self.ball2.pos = self.car.sensor2
             self.ball3.pos = self.car.sensor3
             
+            sand_time = []
             # evaluating reward and done
             if sand[int(self.car.x),int(self.car.y)] > 0:
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
@@ -336,7 +379,7 @@ class Game(Widget):
                 # else:
                 #     last_reward = last_reward +(-0.2)
 
-            if (self.car.x < 201) or (self.car.x > self.width - 41) or (self.car.y < 201) or (self.car.y > self.height - 41): #crude way to handle model failing near boundaries
+            if (self.car.x < 5) or (self.car.x > self.width - 5) or (self.car.y < 5) or (self.car.y > self.height - 5): #crude way to handle model failing near boundaries
                 self.done = True
                 reward = -0.5
             
@@ -377,14 +420,16 @@ class Game(Widget):
             else:
                 self.sand_counter = 0
             if self.sand_counter == 50:
-                self.done = True           
+                self.done = True
+
+            sand_time.append(self.sand_counter)        
 
 
             # We store the new transition into the Experience Replay memory (ReplayBuffer)
-            replay_buffer.add((self.state, new_state, action, reward, self.done))
+            replay_buffer.add((self.state, new_state,orientation, next_orientation, action, reward, self.done))
             #print(self.state, new_state, action, reward, self.done)
             self.state = new_state
-            
+            orientation = new_orientation
                 
             self.episode_timesteps += 1
             self.total_timesteps += 1
