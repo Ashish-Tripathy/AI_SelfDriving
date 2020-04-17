@@ -153,7 +153,7 @@ class Car(Widget):
         img_tmp = PILImage.fromarray(sand.astype("uint8")*255)        
         draw = ImageDraw.Draw(img_tmp)
         extract_car_area = extract_car(x=int(a[1]+160), y=int(a[0]+160), width=10, height=20, angle = self.angle)
-        draw.polygon([tuple(p) for p in extract_car_area], fill=0)
+        draw.polygon([tuple(p) for p in extract_car_area], fill=128)
 
         sand1 = np.asarray(img_tmp)
         cropped_img = sand1[int(a[0])-80:int(a[0])+80, int(a[1])-80:int(a[1])+80] #80x80 images
