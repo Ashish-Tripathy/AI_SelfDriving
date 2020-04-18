@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-
 #define replay buffer
 class ReplayBuffer(object):
     def __init__(self, max_size=1e6):
@@ -45,50 +44,36 @@ class Flatten(torch.nn.Module):
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action, latent_dim):
         super(Actor, self).__init__()
-
+        #1. 32 8x8 filters using ReLU activation.
+        #2. 64 5x5 filters using ReLU activation.
+        #3. 64 3x3 filters using ReLU activation.
+        #4. Flattening layer.
+        #5. Dense layer of 64 nodes, linear activation.
+    
         self.encoder = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 8, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(1, 8, 5), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(8, 16, 3, stride = 2), 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 16, 3, stride = 2),  ## output size: [16, 35, 35]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 16, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8), 
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 32, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),   
-            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
-            torch.nn.BatchNorm2d(4),
-            #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(128),
-            #torch.nn.Conv2d(128, 256, 2),  ## output size: [256, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(256),
-            #torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(32, 32, 4),  ## output size: [16, 35, 35]
             Flatten(),  ## output: 512
         ])
 
         self.linear = torch.nn.ModuleList([
-            torch.nn.Linear(latent_dim, 16),
+            torch.nn.Linear(latent_dim+2, 16),
             #torch.nn.ReLU(),
             #torch.nn.Linear(16, 16),
             torch.nn.Linear(16, 8),
@@ -98,16 +83,22 @@ class Actor(nn.Module):
 
         self.max_action = max_action
 
-    def forward(self, x):
+    def forward(self, x, o):
 
         for layer in self.encoder:
             #print(layer)
             #print("input:", x.size())
             x = layer(x)
             #print("output:", x.size())
-        
+        counter = 0
         for layer in self.linear:
-            x = layer(x)
+            counter += 1
+            if counter == 1:
+                x = torch.cat([x, o], 1) #concat orientation
+                #print(x.size())
+                x = layer(x)
+            else:
+                x = layer(x)
             #print("unclipped action: ", x)
             
         x = self.max_action * x
@@ -119,48 +110,29 @@ class Critic(nn.Module):
         super(Critic, self).__init__()
 
         self.encoder_1 = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 8, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(1, 8, 5), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(8, 16, 3, stride = 2), 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 16, 3, stride = 2),  ## output size: [16, 35, 35]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 16, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8), 
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 32, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),   
-            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
-            torch.nn.BatchNorm2d(4),
-            #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(128),
-            #torch.nn.Conv2d(128, 256, 2),  ## output size: [256, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(256),
-            #torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(32, 32, 4),  ## output size: [16, 35, 35]
             Flatten(),  ## output: 512
         ])
 
         self.linear_1 = torch.nn.ModuleList([
-            torch.nn.Linear(latent_dim+action_dim, 16),
+            torch.nn.Linear(latent_dim+2+action_dim, 16),
             #torch.nn.ReLU(),
             torch.nn.Linear(16, 8),
             torch.nn.Linear(8,1),
@@ -168,47 +140,34 @@ class Critic(nn.Module):
 
 
         self.encoder_2 = torch.nn.ModuleList([  ## input size:[192, 192]
-            torch.nn.Conv2d(1, 8, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.Conv2d(1, 8, 5), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 37, 37]
-            torch.nn.ReLU(),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [16, 35, 35]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(8, 16, 3, stride = 2), 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.MaxPool2d(2,2),    ##[16,17,17]    
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,17,17]
+            #torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 16, 3, stride = 2),  ## output size: [16, 35, 35]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 15,15]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 16, 3, stride = 2), ##changed to 1 ## output size: [8, 39, 39] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8), 
-            torch.nn.Conv2d(8, 16, 3),  ## output size: [16, 13, 13]
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Conv2d(16, 32, 3),  ## output size: [16, 37, 37]
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),   
-            torch.nn.MaxPool2d(2,2),    ##[16,6,6]
-            torch.nn.Conv2d(16,8,1),   #1x1 bottleneck [8,6,6]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 8, 3),  ## output size: [8, 4, 4]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(8),
-            torch.nn.Conv2d(8, 4, 4),  ## output size: [64, 7, 7]
-            torch.nn.BatchNorm2d(4),
-            #torch.nn.Conv2d(128, 256, 7, stride=2),  ## output size: [128, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(128),
-            #torch.nn.Conv2d(128, 256, 2),  ## output size: [256, 2, 2]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(256),
-            #torch.nn.Conv2d(256, 512, 2),  ## output size: [512, 1, 1]
-            #torch.nn.ReLU(),
-            #torch.nn.BatchNorm2d(512),
-            #torch.nn.Conv2d(512, 1024, 5, 2, padding=2),  ## output size: [1024, 1, 1]
+            torch.nn.BatchNorm2d(32),
+            torch.nn.Conv2d(32, 32, 4),  ## output size: [16, 35, 35]
             Flatten(),  ## output: 512
         ])
+        self.linear_2 = torch.nn.ModuleList([
+            torch.nn.Linear(latent_dim+2+action_dim, 16),
+            #torch.nn.ReLU(),
+            torch.nn.Linear(16, 8),
+            torch.nn.Linear(8,1),
+        ])
 
-    def forward(self, x, u):
+    def forward(self, x, o, u):
         #print("entered critic")
         x1 = x
         for layer in self.encoder_1:
@@ -219,7 +178,8 @@ class Critic(nn.Module):
             counter += 1
             #print(u.size())
             if counter == 1:
-                x1 = torch.cat([x1, u], 1)
+                x1 = torch.cat([x1, o], 1) #concat orientation
+                x1 = torch.cat([x1, u], 1) #concat action
                 x1 = layer(x1)
             else:
                 x1 = layer(x1)
@@ -231,14 +191,15 @@ class Critic(nn.Module):
         for layer in self.linear_2:
             counter += 1
             if counter == 1:
-                x2 = torch.cat([x2, u], 1)
+                x2 = torch.cat([x2, o], 1) #concat orientation
+                x2 = torch.cat([x2, u], 1) #concat action
                 x2 = layer(x2)
             else:
                 x2 = layer(x2)
 
         return x1, x2
 
-    def Q1(self, x, u):
+    def Q1(self, x, o, u):
 
         for layer in self.encoder_1:
             x = layer(x)
@@ -247,7 +208,8 @@ class Critic(nn.Module):
         for layer in self.linear_1:
             counter += 1
             if counter == 1:
-                x = torch.cat([x, u], 1)
+                x = torch.cat([x, o], 1) #concat orientation
+                x = torch.cat([x, u], 1) #concat action
                 x = layer(x)
             else:
                 x = layer(x)
@@ -271,9 +233,13 @@ class TD3(object):
     def select_action(self, state, orientation):
         state = state.unsqueeze(0).to(device) #add batch info
         orientation = torch.Tensor(orientation).unsqueeze(0).to(device) #add batch info
+        #print(orientation.size())
         return self.actor(state, orientation).cpu().data.numpy().flatten()
 
-    def train(self, replay_buffer, iterations, batch_size=100, discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
+    #def train(self, replay_buffer, iterations, batch_size=100, \
+     #   discount=0.9, tau=0.05, policy_noise=0.2, noise_clip=1, policy_freq=2):
+    def train(self, replay_buffer, iterations, batch_size=100, \
+        discount=0.99, tau=0.005, policy_noise=0.2, noise_clip=0.5, policy_freq=2):
         
         for it in range(iterations):
                 
@@ -289,6 +255,7 @@ class TD3(object):
             #print("iteration: ", it)
             # Step 5: From the next state s’, the Actor target plays the next action a’
             next_action = self.actor_target(next_state, next_orientation)
+            #print("enter target")
             
             # Step 6: We add Gaussian noise to this next action a’ and we clamp it in a range of values supported by the environment
             noise = torch.Tensor(batch_actions).data.normal_(0, policy_noise).to(device)
@@ -296,7 +263,7 @@ class TD3(object):
             next_action = (next_action + noise).clamp(-self.max_action, self.max_action)
             
             # Step 7: The two Critic targets take each the couple (s’, a’) as input and return two Q-values Qt1(s’,a’) and Qt2(s’,a’) as outputs
-            target_Q1, target_Q2 = self.critic_target(next_state, next_orientation, next_action)
+            target_Q1, target_Q2 = self.critic_target(next_state, next_orientation, next_action) #add orientation
             
             # Step 8: We keep the minimum of these two Q-values: min(Qt1, Qt2)
             target_Q = torch.min(target_Q1, target_Q2)
@@ -325,7 +292,8 @@ class TD3(object):
                 # Step 14: Still once every two iterations, we update the weights of the Actor target by polyak averaging
                 for param, target_param in zip(self.actor.parameters(), self.actor_target.parameters()):
                     target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
-                
+                    #print("successful")
+
                 # Step 15: Still once every two iterations, we update the weights of the Critic target by polyak averaging
                 for param, target_param in zip(self.critic.parameters(), self.critic_target.parameters()):
                     target_param.data.copy_(tau * param.data + (1 - tau) * target_param.data)
