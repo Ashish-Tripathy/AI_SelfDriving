@@ -74,7 +74,7 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 3
+max_action = 5 #reduced to prevent steep turns
 orientation = 0
 
 #function to extract image and rotate
@@ -267,7 +267,7 @@ class Game(Widget):
             
                 if self.total_timesteps > start_timesteps:
                     #print("I am training for steps: ", self.episode_timesteps)
-                    start_time = time.time()
+                    #start_time = time.time()
                     brain.train(replay_buffer, self.episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
                     #print("time in minutes: ", round((time.time() - start_time)/60))
                 #reset set state dimenssion elements once episode is done
@@ -283,7 +283,7 @@ class Game(Widget):
 
                 #initialise 1st state after done, move it towards orientaation
                 self.car.angle = 0
-                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], stete_dim)
+                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
                 #print(self.state.size())
                 #print(self.state)
                 #tens = self.state.view(self.state.shape[1], self.state.shape[2])
@@ -296,7 +296,7 @@ class Game(Widget):
                 #print(orientation)
                 # Set the Done to False
                 self.done = False
-                last_action = []
+                last_action = [0]
                 # Set rewards and episode timesteps to zero
                 self.episode_reward = 0
                 self.episode_timesteps = 0
@@ -326,7 +326,7 @@ class Game(Widget):
 
             #The agent performs the action in the environment, then reaches the next state and receives the reward
             self.car.move(action[0])
-            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], 60)
+            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
             #tens = new_state.view(self.state.shape[1], self.state.shape[2])
             #plt.imshow(tens)
             #plt.show()
@@ -391,7 +391,7 @@ class Game(Widget):
             if abs(float(action[0]) - float(last_action[0]))/max_action < 0.01:
                 reward -= 10
             #punish staying on sand incrementally
-            if self.sand_Counter > 10:
+            if self.sand_counter > 10:
                 reward -= 0.2
 
             
