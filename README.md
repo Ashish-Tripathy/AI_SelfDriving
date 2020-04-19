@@ -6,11 +6,25 @@ I approached this problem, with the idea to try different things mainly to learn
 
 I started with taking the sensor concepts used with the DQN use case and converted it to use TD3 instead of DQN. This exercise helped me understand how will I code the variables, done and rewards to drive the car using TD3. Then I ported the concept to a CNN based TD3 by removing sensors and passing image of the car and its surroundings to the model.
 
-Folders in the projects:
+**Folders and Files in the projects:**
+
+1. Code Archives: Copy of codes which were subsequently changed and replaced by newer codes like the code relating to sensors, my approaches were i was initially drawing car on the image
+
+2. Images: has all the images used in the project
+
+3. logs: It has the logs for 3 runs which were recorded, to check my progress
+
+4. train_CropImgRotatn: Uses the approach of crop and rotation
+
+5. train_smoothPenalty: Uses heavy living penalty, introduces smooth action penalty
+
+6. train_FrameSkip: uses logic of frameskip to continue with a predicted action for those number of frames, and also to push transitions in replay buffer
+
+   My commit history can be checked to get better understanding of all the changes I did in my approach.
 
 
 
-I will be describing my approach with CNN based TD3 and what I learnt from the exercise here.
+I will only be describing my approach with CNN based TD3 and what I learnt from the exercise here.
 
 ### Environment and Scenario:
 
