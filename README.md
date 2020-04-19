@@ -62,8 +62,8 @@ In the process of solving this task, two approaches were adopted to understand w
    
 
     Cropped 60x60 image scaled to 28x28:
+![](https://i.imgur.com/1yeRFjG.png =250x250)
 
-<img src="https://i.imgur.com/1yeRFjG.png" style="zoom: 50%;" />
 
 #### Pre-training filling up Replay buffer with  transitions
 
