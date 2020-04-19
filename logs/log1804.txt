@@ -1,35 +1,101 @@
-Steps:  281 Episode:  1 Reward:  -242.49999999999923 Ep Steps:  281 Distance covered:  226.01861518533954 Distance left:  583.8391370792306
-Steps:  529 Episode:  2 Reward:  -249.09999999999914 Ep Steps:  248 Distance covered:  194.53895446429132 Distance left:  598.9053816578551
-Steps:  923 Episode:  3 Reward:  -387.69999999999783 Ep Steps:  394 Distance covered:  275.9543928133826 Distance left:  481.3897059252591
-Steps:  1152 Episode:  4 Reward:  -272.89999999999895 Ep Steps:  229 Distance covered:  159.40376335098884 Distance left:  611.9867586200781
-Steps:  1465 Episode:  5 Reward:  -246.0999999999993 Ep Steps:  313 Distance covered:  306.3590137120095 Distance left:  445.9340348350046
-Steps:  1692 Episode:  6 Reward:  -283.29999999999905 Ep Steps:  227 Distance covered:  156.07668740169984 Distance left:  610.7220067419515
-Steps:  2193 Episode:  7 Reward:  -586.2999999999996 Ep Steps:  501 Distance covered:  247.70295252267732 Distance left:  914.8226643183859
-Steps:  2420 Episode:  8 Reward:  -252.59999999999923 Ep Steps:  227 Distance covered:  154.68302044074764 Distance left:  620.2900556568477
-Steps:  2651 Episode:  9 Reward:  -242.4999999999992 Ep Steps:  231 Distance covered:  164.80027348969668 Distance left:  600.7524928281823
-Steps:  2878 Episode:  10 Reward:  -253.299999999999 Ep Steps:  227 Distance covered:  150.69305796730535 Distance left:  654.8348863622119
-Steps:  3295 Episode:  11 Reward:  -468.69999999999754 Ep Steps:  417 Distance covered:  277.1547525939454 Distance left:  475.643591414925
-Steps:  3521 Episode:  12 Reward:  -243.4999999999992 Ep Steps:  226 Distance covered:  151.81601917972412 Distance left:  617.2367611938843
-Steps:  3790 Episode:  13 Reward:  -224.8999999999993 Ep Steps:  269 Distance covered:  230.46670128226089 Distance left:  561.3511806006567
-Steps:  4037 Episode:  14 Reward:  -239.29999999999916 Ep Steps:  247 Distance covered:  196.20757022335115 Distance left:  584.9163316054115
-Steps:  4262 Episode:  15 Reward:  -243.6999999999991 Ep Steps:  225 Distance covered:  143.44431696905465 Distance left:  681.6259287014923
-Steps:  4497 Episode:  16 Reward:  -261.699999999999 Ep Steps:  235 Distance covered:  168.85160295647862 Distance left:  623.0013913644661
-Steps:  4936 Episode:  17 Reward:  -288.6999999999986 Ep Steps:  439 Distance covered:  438.6597793866664 Distance left:  313.58660134378414
-Steps:  5210 Episode:  18 Reward:  -262.4999999999991 Ep Steps:  274 Distance covered:  190.74034756370182 Distance left:  623.4508174400256
-Steps:  5449 Episode:  19 Reward:  -240.89999999999924 Ep Steps:  239 Distance covered:  166.1663773243674 Distance left:  648.2603779727989
-Steps:  5848 Episode:  20 Reward:  -348.69999999999817 Ep Steps:  399 Distance covered:  340.1745475093763 Distance left:  443.4126666029547
-Steps:  6101 Episode:  21 Reward:  -266.49999999999903 Ep Steps:  253 Distance covered:  164.56657248407944 Distance left:  602.494479182946
-Steps:  6324 Episode:  22 Reward:  -274.0999999999991 Ep Steps:  223 Distance covered:  146.15075790159509 Distance left:  616.3469592780731
-Steps:  6618 Episode:  23 Reward:  -219.89999999999938 Ep Steps:  294 Distance covered:  281.8810674475316 Distance left:  470.2836339140715
-Steps:  6856 Episode:  24 Reward:  -241.09999999999923 Ep Steps:  238 Distance covered:  178.86149023847423 Distance left:  598.782991008662
-Steps:  7103 Episode:  25 Reward:  -229.29999999999924 Ep Steps:  247 Distance covered:  195.87750438882202 Distance left:  579.4019102726392
-Steps:  7439 Episode:  26 Reward:  -249.89999999999912 Ep Steps:  336 Distance covered:  325.74624341510264 Distance left:  427.6530571817139
-Steps:  7668 Episode:  27 Reward:  -272.8999999999989 Ep Steps:  229 Distance covered:  154.79624802957042 Distance left:  650.2953304539988
-Steps:  7898 Episode:  28 Reward:  -242.69999999999922 Ep Steps:  230 Distance covered:  158.2591274150744 Distance left:  635.9235667467601
-Steps:  8399 Episode:  29 Reward:  -446.099999999998 Ep Steps:  501 Distance covered:  409.464643908113 Distance left:  400.6402119049491
-Steps:  8631 Episode:  30 Reward:  -292.2999999999987 Ep Steps:  232 Distance covered:  161.40108892807876 Distance left:  627.1604133835214
-Steps:  8884 Episode:  31 Reward:  -248.09999999999917 Ep Steps:  253 Distance covered:  181.69819831300478 Distance left:  622.3969347732304
-Steps:  9385 Episode:  32 Reward:  -547.8999999999994 Ep Steps:  501 Distance covered:  338.3778785113912 Distance left:  535.6930704328291
-Steps:  9733 Episode:  33 Reward:  -278.89999999999867 Ep Steps:  348 Distance covered:  336.4481288917895 Distance left:  415.66742872332907
-Steps:  9971 Episode:  34 Reward:  -231.09999999999923 Ep Steps:  238 Distance covered:  177.42732221165008 Distance left:  611.6591719876485
-Steps:  11718 Episode:  35 Reward:  -2752.599999999977 Ep Steps:  1747 Distance covered:  68.77558375695983 Distance left:  742.5640188166938
+Steps:  1001 Episode:  1 Reward:  -528.0 Ep Steps:  1001 Distance covered:  510.25 Distance left:  241.93 punish by sand:  -469.5 punish living:  -58.5
+Steps:  1983 Episode:  2 Reward:  -557.5 Ep Steps:  982 Distance covered:  401.56 Distance left:  805.75 punish by sand:  -460.0 punish living:  -97.5
+Steps:  2984 Episode:  3 Reward:  -564.5 Ep Steps:  1001 Distance covered:  425.4 Distance left:  669.0 punish by sand:  -475.5 punish living:  -89.0
+Steps:  3821 Episode:  4 Reward:  -458.5 Ep Steps:  837 Distance covered:  345.46 Distance left:  526.61 punish by sand:  -387.5 punish living:  -71.0
+Steps:  4528 Episode:  5 Reward:  -325.5 Ep Steps:  707 Distance covered:  441.22 Distance left:  378.63 punish by sand:  -304.5 punish living:  -21.0
+Steps:  5529 Episode:  6 Reward:  -513.0 Ep Steps:  1001 Distance covered:  569.55 Distance left:  456.27 punish by sand:  -442.0 punish living:  -71.0
+Steps:  6530 Episode:  7 Reward:  -553.5 Ep Steps:  1001 Distance covered:  567.66 Distance left:  614.64 punish by sand:  -471.5 punish living:  -82.0
+Steps:  7531 Episode:  8 Reward:  -561.5 Ep Steps:  1001 Distance covered:  307.99 Distance left:  598.91 punish by sand:  -472.0 punish living:  -89.5
+Steps:  8199 Episode:  9 Reward:  -333.0 Ep Steps:  668 Distance covered:  335.45 Distance left:  546.75 punish by sand:  -292.0 punish living:  -41.0
+Steps:  9124 Episode:  10 Reward:  -358.5 Ep Steps:  925 Distance covered:  722.56 Distance left:  126.13 punish by sand:  -368.0 punish living:  9.5
+Steps:  9688 Episode:  11 Reward:  -244.0 Ep Steps:  564 Distance covered:  367.19 Distance left:  487.78 punish by sand:  -234.0 punish living:  -10.0
+Steps:  10689 Episode:  12 Reward:  -597.5 Ep Steps:  1001 Distance covered:  268.91 Distance left:  640.69 punish by sand:  -475.0 punish living:  -122.5
+Steps:  11690 Episode:  13 Reward:  -629.0 Ep Steps:  1001 Distance covered:  184.35 Distance left:  694.59 punish by sand:  -472.5 punish living:  -156.5
+Steps:  12691 Episode:  14 Reward:  -698.0 Ep Steps:  1001 Distance covered:  59.04 Distance left:  713.2 punish by sand:  -442.0 punish living:  -256.0
+Steps:  13692 Episode:  15 Reward:  -630.0 Ep Steps:  1001 Distance covered:  66.19 Distance left:  692.57 punish by sand:  -396.5 punish living:  -233.5
+Steps:  14693 Episode:  16 Reward:  -594.0 Ep Steps:  1001 Distance covered:  62.37 Distance left:  690.98 punish by sand:  -403.5 punish living:  -190.5
+Steps:  15694 Episode:  17 Reward:  -737.5 Ep Steps:  1001 Distance covered:  48.08 Distance left:  711.7 punish by sand:  -456.5 punish living:  -281.0
+Steps:  16695 Episode:  18 Reward:  -652.0 Ep Steps:  1001 Distance covered:  71.57 Distance left:  717.22 punish by sand:  -374.0 punish living:  -278.0
+Steps:  17696 Episode:  19 Reward:  -737.0 Ep Steps:  1001 Distance covered:  82.04 Distance left:  808.03 punish by sand:  -420.0 punish living:  -317.0
+Steps:  18697 Episode:  20 Reward:  -762.5 Ep Steps:  1001 Distance covered:  56.73 Distance left:  697.64 punish by sand:  -475.0 punish living:  -287.5
+Steps:  19698 Episode:  21 Reward:  -686.0 Ep Steps:  1001 Distance covered:  145.33 Distance left:  672.85 punish by sand:  -410.5 punish living:  -275.5
+Steps:  20699 Episode:  22 Reward:  -636.5 Ep Steps:  1001 Distance covered:  183.61 Distance left:  638.31 punish by sand:  -360.5 punish living:  -276.0
+Steps:  21700 Episode:  23 Reward:  -698.5 Ep Steps:  1001 Distance covered:  88.53 Distance left:  726.47 punish by sand:  -395.5 punish living:  -303.0
+Steps:  22701 Episode:  24 Reward:  -696.0 Ep Steps:  1001 Distance covered:  78.09 Distance left:  753.99 punish by sand:  -391.0 punish living:  -305.0
+Steps:  23702 Episode:  25 Reward:  -769.0 Ep Steps:  1001 Distance covered:  50.25 Distance left:  704.5 punish by sand:  -483.0 punish living:  -286.0
+Steps:  24703 Episode:  26 Reward:  -709.0 Ep Steps:  1001 Distance covered:  83.0 Distance left:  698.3 punish by sand:  -417.0 punish living:  -292.0
+Steps:  25704 Episode:  27 Reward:  -761.5 Ep Steps:  1001 Distance covered:  82.05 Distance left:  811.13 punish by sand:  -423.5 punish living:  -338.0
+Steps:  26705 Episode:  28 Reward:  -732.5 Ep Steps:  1001 Distance covered:  52.12 Distance left:  758.66 punish by sand:  -412.0 punish living:  -320.5
+Steps:  27706 Episode:  29 Reward:  -817.0 Ep Steps:  1001 Distance covered:  32.48 Distance left:  719.68 punish by sand:  -495.0 punish living:  -322.0
+Steps:  28707 Episode:  30 Reward:  -612.0 Ep Steps:  1001 Distance covered:  143.96 Distance left:  636.24 punish by sand:  -336.5 punish living:  -275.5
+Steps:  29708 Episode:  31 Reward:  -748.0 Ep Steps:  1001 Distance covered:  88.53 Distance left:  819.97 punish by sand:  -408.0 punish living:  -340.0
+Steps:  30709 Episode:  32 Reward:  -704.5 Ep Steps:  1001 Distance covered:  151.98 Distance left:  758.0 punish by sand:  -379.0 punish living:  -325.5
+Steps:  31710 Episode:  33 Reward:  -815.0 Ep Steps:  1001 Distance covered:  33.34 Distance left:  718.81 punish by sand:  -493.0 punish living:  -322.0
+Steps:  32711 Episode:  34 Reward:  -823.5 Ep Steps:  1001 Distance covered:  21.69 Distance left:  730.77 punish by sand:  -495.5 punish living:  -328.0
+Steps:  33712 Episode:  35 Reward:  -783.5 Ep Steps:  1001 Distance covered:  46.7 Distance left:  773.62 punish by sand:  -427.5 punish living:  -356.0
+Steps:  34713 Episode:  36 Reward:  -819.5 Ep Steps:  1001 Distance covered:  44.58 Distance left:  709.43 punish by sand:  -495.0 punish living:  -324.5
+Steps:  35714 Episode:  37 Reward:  -840.0 Ep Steps:  1001 Distance covered:  37.15 Distance left:  714.97 punish by sand:  -495.5 punish living:  -344.5
+Steps:  36715 Episode:  38 Reward:  -689.5 Ep Steps:  1001 Distance covered:  168.33 Distance left:  585.4 punish by sand:  -391.0 punish living:  -298.5
+Steps:  37716 Episode:  39 Reward:  -758.0 Ep Steps:  1001 Distance covered:  161.47 Distance left:  692.68 punish by sand:  -429.5 punish living:  -328.5
+Steps:  38717 Episode:  40 Reward:  -687.5 Ep Steps:  1001 Distance covered:  85.42 Distance left:  667.16 punish by sand:  -371.0 punish living:  -316.5
+Steps:  39718 Episode:  41 Reward:  -677.0 Ep Steps:  1001 Distance covered:  73.48 Distance left:  710.08 punish by sand:  -355.5 punish living:  -321.5
+Steps:  40719 Episode:  42 Reward:  -795.5 Ep Steps:  1001 Distance covered:  69.11 Distance left:  732.69 punish by sand:  -428.5 punish living:  -367.0
+Steps:  41720 Episode:  43 Reward:  -791.5 Ep Steps:  1001 Distance covered:  88.45 Distance left:  817.3 punish by sand:  -393.0 punish living:  -398.5
+Steps:  42721 Episode:  44 Reward:  -757.0 Ep Steps:  1001 Distance covered:  136.11 Distance left:  702.62 punish by sand:  -421.0 punish living:  -336.0
+Steps:  43722 Episode:  45 Reward:  -856.5 Ep Steps:  1001 Distance covered:  28.6 Distance left:  730.72 punish by sand:  -495.0 punish living:  -361.5
+Steps:  44723 Episode:  46 Reward:  -879.5 Ep Steps:  1001 Distance covered:  22.75 Distance left:  731.19 punish by sand:  -495.5 punish living:  -384.0
+Steps:  45724 Episode:  47 Reward:  -799.0 Ep Steps:  1001 Distance covered:  76.69 Distance left:  786.6 punish by sand:  -386.5 punish living:  -412.5
+Steps:  46725 Episode:  48 Reward:  -770.0 Ep Steps:  1001 Distance covered:  189.09 Distance left:  830.86 punish by sand:  -353.0 punish living:  -417.0
+Steps:  47726 Episode:  49 Reward:  -818.0 Ep Steps:  1001 Distance covered:  87.09 Distance left:  818.55 punish by sand:  -407.0 punish living:  -411.0
+Steps:  48727 Episode:  50 Reward:  -852.0 Ep Steps:  1001 Distance covered:  60.06 Distance left:  698.49 punish by sand:  -478.5 punish living:  -373.5
+Steps:  49728 Episode:  51 Reward:  -816.5 Ep Steps:  1001 Distance covered:  49.04 Distance left:  724.12 punish by sand:  -416.5 punish living:  -400.0
+Steps:  50729 Episode:  52 Reward:  -861.0 Ep Steps:  1001 Distance covered:  57.73 Distance left:  695.46 punish by sand:  -481.5 punish living:  -379.5
+Steps:  51730 Episode:  53 Reward:  -798.0 Ep Steps:  1001 Distance covered:  76.61 Distance left:  748.28 punish by sand:  -391.0 punish living:  -407.0
+Steps:  52731 Episode:  54 Reward:  -846.0 Ep Steps:  1001 Distance covered:  65.22 Distance left:  712.76 punish by sand:  -445.0 punish living:  -401.0
+Steps:  53732 Episode:  55 Reward:  -830.0 Ep Steps:  1001 Distance covered:  68.3 Distance left:  792.65 punish by sand:  -390.5 punish living:  -439.5
+Steps:  54733 Episode:  56 Reward:  -902.5 Ep Steps:  1001 Distance covered:  35.44 Distance left:  719.06 punish by sand:  -494.5 punish living:  -408.0
+Steps:  55734 Episode:  57 Reward:  -773.0 Ep Steps:  1001 Distance covered:  87.43 Distance left:  709.35 punish by sand:  -350.5 punish living:  -422.5
+Steps:  56735 Episode:  58 Reward:  -846.0 Ep Steps:  1001 Distance covered:  104.23 Distance left:  812.66 punish by sand:  -403.5 punish living:  -442.5
+Steps:  57736 Episode:  59 Reward:  -769.0 Ep Steps:  1001 Distance covered:  85.13 Distance left:  726.93 punish by sand:  -354.0 punish living:  -415.0
+Steps:  58737 Episode:  60 Reward:  -918.0 Ep Steps:  1001 Distance covered:  27.36 Distance left:  728.97 punish by sand:  -495.5 punish living:  -422.5
+Steps:  59738 Episode:  61 Reward:  -810.5 Ep Steps:  1001 Distance covered:  90.08 Distance left:  776.34 punish by sand:  -386.5 punish living:  -424.0
+Steps:  60739 Episode:  62 Reward:  -815.5 Ep Steps:  1001 Distance covered:  154.29 Distance left:  751.62 punish by sand:  -378.0 punish living:  -437.5
+Steps:  61740 Episode:  63 Reward:  -897.0 Ep Steps:  1001 Distance covered:  55.53 Distance left:  704.52 punish by sand:  -473.5 punish living:  -423.5
+Steps:  62741 Episode:  64 Reward:  -881.2 Ep Steps:  1001 Distance covered:  97.55 Distance left:  815.99 punish by sand:  -407.2 punish living:  -474.0
+Steps:  63742 Episode:  65 Reward:  -838.0 Ep Steps:  1001 Distance covered:  79.3 Distance left:  760.57 punish by sand:  -387.0 punish living:  -451.0
+Steps:  64743 Episode:  66 Reward:  -900.5 Ep Steps:  1001 Distance covered:  49.42 Distance left:  705.84 punish by sand:  -478.0 punish living:  -422.5
+Steps:  65744 Episode:  67 Reward:  -950.0 Ep Steps:  1001 Distance covered:  26.74 Distance left:  725.41 punish by sand:  -495.5 punish living:  -454.5
+Steps:  66745 Episode:  68 Reward:  -872.5 Ep Steps:  1001 Distance covered:  61.69 Distance left:  704.27 punish by sand:  -425.5 punish living:  -447.0
+Steps:  67746 Episode:  69 Reward:  -825.5 Ep Steps:  1001 Distance covered:  86.08 Distance left:  694.13 punish by sand:  -380.0 punish living:  -445.5
+Steps:  68747 Episode:  70 Reward:  -819.2 Ep Steps:  1001 Distance covered:  49.18 Distance left:  723.59 punish by sand:  -357.7 punish living:  -461.5
+Steps:  69748 Episode:  71 Reward:  -949.5 Ep Steps:  1001 Distance covered:  49.22 Distance left:  703.69 punish by sand:  -486.5 punish living:  -463.0
+Steps:  70749 Episode:  72 Reward:  -882.5 Ep Steps:  1001 Distance covered:  89.07 Distance left:  810.39 punish by sand:  -388.5 punish living:  -494.0
+Steps:  71750 Episode:  73 Reward:  -857.0 Ep Steps:  1001 Distance covered:  79.8 Distance left:  739.43 punish by sand:  -376.0 punish living:  -481.0
+Steps:  72751 Episode:  74 Reward:  -832.2 Ep Steps:  1001 Distance covered:  178.36 Distance left:  767.35 punish by sand:  -341.7 punish living:  -490.5
+Steps:  73752 Episode:  75 Reward:  -864.5 Ep Steps:  1001 Distance covered:  47.64 Distance left:  746.87 punish by sand:  -382.5 punish living:  -482.0
+Steps:  74753 Episode:  76 Reward:  -911.5 Ep Steps:  1001 Distance covered:  60.04 Distance left:  712.38 punish by sand:  -443.5 punish living:  -468.0
+Steps:  75754 Episode:  77 Reward:  -766.0 Ep Steps:  1001 Distance covered:  168.77 Distance left:  589.01 punish by sand:  -344.0 punish living:  -422.0
+Steps:  76755 Episode:  78 Reward:  -870.5 Ep Steps:  1001 Distance covered:  176.15 Distance left:  795.4 punish by sand:  -366.0 punish living:  -504.5
+Steps:  77756 Episode:  79 Reward:  -870.7 Ep Steps:  1001 Distance covered:  17.35 Distance left:  735.32 punish by sand:  -366.7 punish living:  -504.0
+Steps:  78757 Episode:  80 Reward:  -935.0 Ep Steps:  1001 Distance covered:  48.27 Distance left:  774.06 punish by sand:  -432.0 punish living:  -503.0
+Steps:  79758 Episode:  81 Reward:  -974.0 Ep Steps:  1001 Distance covered:  27.74 Distance left:  724.51 punish by sand:  -491.0 punish living:  -483.0
+Steps:  80759 Episode:  82 Reward:  -908.0 Ep Steps:  1001 Distance covered:  87.29 Distance left:  817.47 punish by sand:  -379.0 punish living:  -529.0
+Steps:  81760 Episode:  83 Reward:  -879.7 Ep Steps:  1001 Distance covered:  73.84 Distance left:  725.45 punish by sand:  -387.7 punish living:  -492.0
+Steps:  82761 Episode:  84 Reward:  -925.0 Ep Steps:  1001 Distance covered:  56.08 Distance left:  707.29 punish by sand:  -444.0 punish living:  -481.0
+Steps:  83762 Episode:  85 Reward:  -971.0 Ep Steps:  1001 Distance covered:  51.01 Distance left:  701.72 punish by sand:  -486.5 punish living:  -484.5
+Steps:  84763 Episode:  86 Reward:  -941.0 Ep Steps:  1001 Distance covered:  39.93 Distance left:  750.55 punish by sand:  -437.0 punish living:  -504.0
+Steps:  85764 Episode:  87 Reward:  -971.5 Ep Steps:  1001 Distance covered:  54.2 Distance left:  697.98 punish by sand:  -486.5 punish living:  -485.0
+Steps:  86765 Episode:  88 Reward:  -971.0 Ep Steps:  1001 Distance covered:  55.32 Distance left:  696.93 punish by sand:  -485.5 punish living:  -485.5
+Steps:  87766 Episode:  89 Reward:  -901.2 Ep Steps:  1001 Distance covered:  56.34 Distance left:  711.72 punish by sand:  -409.7 punish living:  -491.5
+Steps:  88767 Episode:  90 Reward:  -927.2 Ep Steps:  1001 Distance covered:  89.85 Distance left:  811.74 punish by sand:  -400.2 punish living:  -527.0
+Steps:  89768 Episode:  91 Reward:  -888.2 Ep Steps:  1001 Distance covered:  164.36 Distance left:  742.88 punish by sand:  -392.2 punish living:  -496.0
+Steps:  90769 Episode:  92 Reward:  -927.0 Ep Steps:  1001 Distance covered:  95.13 Distance left:  791.86 punish by sand:  -407.5 punish living:  -519.5
+Steps:  91770 Episode:  93 Reward:  -888.2 Ep Steps:  1001 Distance covered:  97.06 Distance left:  800.06 punish by sand:  -357.2 punish living:  -531.0
+Steps:  92771 Episode:  94 Reward:  -976.0 Ep Steps:  1001 Distance covered:  40.76 Distance left:  711.62 punish by sand:  -488.5 punish living:  -487.5
+Steps:  93772 Episode:  95 Reward:  -971.2 Ep Steps:  1001 Distance covered:  45.57 Distance left:  706.6 punish by sand:  -485.7 punish living:  -485.5
+Steps:  94773 Episode:  96 Reward:  -879.2 Ep Steps:  1001 Distance covered:  178.66 Distance left:  794.69 punish by sand:  -365.7 punish living:  -513.5
+Steps:  95774 Episode:  97 Reward:  -844.2 Ep Steps:  1001 Distance covered:  60.27 Distance left:  778.84 punish by sand:  -332.7 punish living:  -511.5
+Steps:  96775 Episode:  98 Reward:  -935.2 Ep Steps:  1001 Distance covered:  75.22 Distance left:  807.55 punish by sand:  -417.2 punish living:  -518.0
+Steps:  97776 Episode:  99 Reward:  -960.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -481.5
+Steps:  98777 Episode:  100 Reward:  -961.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -482.5
+Steps:  99778 Episode:  101 Reward:  -961.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -482.5
