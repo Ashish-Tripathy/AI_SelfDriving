@@ -1,8 +1,12 @@
 # Self Driving Car
 #v2 - 
-# 1. Frame skip
-# 2. Minimum rewards similar to A7 with increased values. More reward to distance covered and more living penalty
-
+# 1. updating the max_env_steps to 5000 after 10000 max_stepss
+# 2. updating max_action to 5 - car doesnot move a lot mostly straight lines
+# 2.1 updating max_action to 45 - car doesnot move a lot mostly straight lines
+# 3. updating max
+# 4. other hyperparams: 1. velocity and angle updates when car in road or sand; 2. proper randomisation of actions for building buffer
+# 5. hyperparams for punishing and rewarding the agent - 
+#       done = True if self.av_r(reward) <= -0.1 else False
 
 
 
@@ -90,13 +94,7 @@ def get_target_image(img, angle, center, size, fill_with = 255):
     final = rotated[int(y/2-(size/2)):int(y/2+(size/2)),int(x/2-(size/2)):int(x/2+(size/2))]
     final = torch.from_numpy(np.array(final)).float().div(255)
     final = final.unsqueeze(0).unsqueeze(0)
-    #tens = final.view(final.shape[2], final.shape[3])
-    #plt.imshow(tens)
-    #plt.show()
     final = F.interpolate(final,size=(28,28))
-    #tens = final.view(final.shape[2], final.shape[3])
-    #plt.imshow(tens)
-    #plt.show()
     #final = final.unsqueeze(0)
 
     #print(rotated.shape)
@@ -105,7 +103,6 @@ def get_target_image(img, angle, center, size, fill_with = 255):
 
 #initialise variables
 state_dim = 28 #state dimension is 60x60 image having car at the center with one channel for grayscale
-crop_dim = 60
 action_dim = 1
 latent_dim = 16
 brain = TD3(state_dim,action_dim,max_action,latent_dim)
@@ -204,7 +201,7 @@ class Game(Widget):
     episode_num = 0
     done = True
     t0 = time.time()
-    max_timesteps = 100000
+    max_timesteps = 400000
     state = torch.zeros([1,state_dim,state_dim]) #shape of the cropped image
     episode_reward = 0
     episode_timesteps = 0
@@ -212,7 +209,6 @@ class Game(Widget):
     p_sand = 0
     p_living = 0
     lp_counter = 0
-    frame_skip = 5
     #decay expl noise every 4000 timestep
     expl_noise_vals = np.linspace(max_action, int(max_action/100), num=int(max_timesteps/4000), endpoint=True, retstep=False, dtype=None, axis=0) # Exploration noise - STD value of exploration Gaussian noise
     def serve_car(self):
@@ -244,7 +240,7 @@ class Game(Widget):
         discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
         tau = 0.005 # Target network update rate
         policy_noise = 0.2 # STD of Gaussian noise added to the actions for the exploration purposes
-        noise_clip = 0.4 # Maximum value of the Gaussian noise added to the actions (policy)
+        noise_clip = 0.5 # Maximum value of the Gaussian noise added to the actions (policy)
         policy_freq = 2 # Number of iterations to wait before the policy network (Actor model) is updated
         expl_noise = 0
         # total_timesteps = 0
@@ -274,7 +270,7 @@ class Game(Widget):
                     l_reward = round(float(self.episode_reward * self.p_living/(self.p_sand+self.p_living)),2)
                     #c = np.amax(sand_time)
                     #logger.info("Steps: %d , Reward: %d , Ep: %d , Ep steps: %d , Distance: %d , Distance left: %d ", self.total_timesteps,self.episode_num,self.episode_reward, self.episode_timesteps,distance_travelled,distance)
-                    with open("./logs/log1904_2.txt", 'a') as f:
+                    with open("./logs/log1904.txt", 'a') as f:
                         sys.stdout = f
                         print("Steps: ", self.total_timesteps, "Episode: ",self.episode_num, "Reward: ", self.episode_reward,"Ep Steps: ", self.episode_timesteps,"Distance covered: ", round(float(distance_travelled),2), "Distance left: ", round(float(distance),2), "punish by sand: ", s_reward, "punish living: ", l_reward)          
             
@@ -296,7 +292,7 @@ class Game(Widget):
 
                 #initialise 1st state after done, move it towards orientaation
                 self.car.angle = 0
-                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
+                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
                 #print(self.state.size())
                 #print(self.state)
                 #tens = self.state.view(self.state.shape[1], self.state.shape[2])
@@ -321,35 +317,28 @@ class Game(Widget):
                 self.p_sand = 0
             # Before 10000 timesteps, we play random actions based on uniform distn
             if self.total_timesteps < start_timesteps:
-                if (self.episode_timesteps%self.frame_skip == 0):
-                    action = [np.random.uniform(-max_action, max_action)]
-                else:
-                    action = last_action
+                action = [np.random.uniform(-max_action, max_action)]
                 
             #else:
             ##debug:
             #if self.total_timesteps == 10500:
             #   print("check")
             else: # After 10000 timesteps, we switch to the model
-                if (self.episode_timesteps%self.frame_skip == 0):
-                    action = brain.select_action(self.state, np.array(orientation))
-                    expl_noise = self.expl_noise_vals[int(self.total_timesteps/4000)]
-                    action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
-                else:
-                    action = last_action
+                action = brain.select_action(self.state, np.array(orientation))
                 #print("earlier action:", action)
                 #exploraion noise decay, car getting stuck in the same actions needs aggressive exploration, decay atfer it has learnt something
-
+                expl_noise = self.expl_noise_vals[int(self.total_timesteps/4000)]
+                action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
             #print("noise action:", action)
 
             #smooth action if much difference between first and next action
-                #if round(abs(float(action[0]) - float(last_action[0])))> 0.5:
-                #   action[0] = (action[0] + last_action[0]) / 2
+                if round(abs(float(action[0]) - float(last_action[0])))> 0.5:
+                    action[0] = (action[0] + last_action[0]) / 2
             
 
             #The agent performs the action in the environment, then reaches the next state and receives the reward
             self.car.move(action[0])
-            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
+            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
             #tens = new_state.view(self.state.shape[1], self.state.shape[2])
             #plt.imshow(tens)
             #plt.show()
@@ -366,74 +355,54 @@ class Game(Widget):
             
             sand_time = []
             
-            #finishing done and starting from the same place
             # evaluating reward and done
-            
-            #sand rewards
+            ##aggressive reward on reducing distance
+
             if sand[int(self.car.x),int(self.car.y)] > 0:# and self.total_timesteps < start_timesteps:
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
                 self.sand_counter +=1
-                reward = -5
+                reward = -0.2
                 self.done = False
-                self.p_sand += 5
+                self.p_sand += 0.2
 
             else: # otherwise
                 self.car.velocity = Vector(2, 0).rotate(self.car.angle)
                 self.sand_counter = 0
-                reward = -2.5 #living penalty
-                self.p_living += 2.5
+                reward = -0.5 #living penalty
+                self.p_living += 0.5
 
+                if distance < last_distance:
+                    reward += 0.5
+                    self.p_living -= 0.5
             
-            #reward based on distance from goal
-            if distance < last_distance:
-                reward += 10
-                self.p_living -= 10
 
-            #punish on going close to boundaries
+
+
+                # else:
+                #     last_reward = last_reward +(-0.2)
+
             if (self.car.x < 5) or (self.car.x > self.width - 5) or (self.car.y < 5) or (self.car.y > self.height - 5): #crude way to handle model failing near boundaries
                 self.done = True
-                reward -= 0.5
-                self.p_living += 0.5
+                reward -= 1
+                self.p_living += 1
             
-            #reward on moving forward as function of distance
-            # if distance == 0:
-            #    reward +=100
-            #else:
-             #   reward += float(100 * (1/distance)) #0.2
-              #  self.p_living -= float(100 * (1/distance))
+            reward += float(100/distance) #0.2
+            self.p_living -= float(100/distance)
+            
 
-            #Finish episode and swap goals
-            if distance < 10:
-                if swap == 1:
-                    goal_x = 1420
-                    goal_y = 622
-                    swap = 0
-                    reward += 20 
-                    self.done = True
-                else:
-                    goal_x = 9
-                    goal_y = 85
-                    swap = 1
-                    reward += 20
-                    self.done = True
-            last_distance = distance
             
 
             #additional rewards and punishments:
-            
+
             ##add punishment if sand touched before 10 timesteps
-            #if self.episode_timesteps < 10 and self.sand_counter == 1:
-            #   reward -= 0.2
-            #  self.p_sand += 0.2
+            if self.episode_timesteps < 10 and self.sand_counter == 1:
+                reward -= 0.2
+                self.p_sand += 0.2
 
             #punish roundabout circles
-            #if abs(float(action[0]) - float(last_action[0]))/max_action < 0.2:
-            #   reward -= 0.5
-            #  self.p_living += 0.5
-
-            #penalising for the magnitude of action angle  adopted from https://arxiv.org/pdf/1904.09503.pdf
-            reward -= ((action[0]**2)*0.5)
-            self.p_living += ((action[0]**2)*0.5)
+            if abs(float(action[0]) - float(last_action[0]))/max_action < 0.2:
+                reward -= 0.5
+                self.p_living += 0.5
 
             #punish staying on sand incrementally
             #if self.sand_counter > 10:
@@ -441,13 +410,12 @@ class Game(Widget):
             #  self.p_sand += 0.1
 
             distance_travelled = np.sqrt((self.car.x - 715)**2 + (self.car.y - 360)**2)
-            #if distance_travelled < last_distance_travelled:
-             #   self.lp_counter += 1
+            if distance_travelled < last_distance_travelled:
+                self.lp_counter += 1
 
-            #if self.lp_counter == 20:
-             #   reward -= 0.5
-              #  self.p_living +=0.5
-
+            if self.lp_counter == 20:
+                reward -= 1
+                self.p_living +=1
 
 
 
@@ -465,25 +433,46 @@ class Game(Widget):
             self.episode_reward += reward
 
             #end episode after some timesteps
-            if self.episode_timesteps == 1000 and self.total_timesteps<start_timesteps:
-                reward -= -0.5
+            if distance == 0:
+                reward += 100
+                self.p_living -= 100
+            else:
+                reward += float(100/distance) #0.2
+                self.p_living -= float(100/distance)
+
+            if distance < 50:
+                if swap == 1:
+                    goal_x = 1420
+                    goal_y = 622
+                    swap = 0
+                    self.done = True
+                else:
+                    goal_x = 9
+                    goal_y = 85
+                    swap = 1
+                    self.done = True
+            last_distance = distance
+
+            if self.episode_timesteps == 10000 and self.total_timesteps<start_timesteps:
+                reward -= 10
+                self.p_living -= 10
                 self.done = True
-            if self.episode_timesteps == 1000 and self.total_timesteps>start_timesteps:# and episode_reward > -200:
-                reward -= 0.5
-                self.done = True
-            if self.episode_timesteps == 5000 and self.total_timesteps>(start_timesteps*3):
-                reward -= 0.5
-                self.done = True
+            # if self.episode_timesteps == 1000 and self.total_timesteps>start_timesteps:# and episode_reward > -200:
+            #     reward -= 1
+            #     self.done = True
+            # if self.episode_timesteps == 2000 and self.total_timesteps>(start_timesteps*3):
+            #     reward -= 1
+            #     self.done = True
+            # if self.episode_timesteps == 5000 and self.total_timesteps>(start_timesteps*6):
+            #     reward -= 1
+            #     self.done = True
 
             sand_time.append(self.sand_counter) #not used
 
 
-            if (self.episode_timesteps%self.frame_skip == 0):
             # We store the new transition into the Experience Replay memory (ReplayBuffer)
-                replay_buffer.add((self.state, new_state, orientation, new_orientation, action, reward, self.done))
-            
+            replay_buffer.add((self.state, new_state, orientation, new_orientation, action, reward, self.done))
             #print(self.state, new_state, action, reward, self.done)
-            
             self.state = new_state
             self.orientation = new_orientation
             self.episode_timesteps += 1

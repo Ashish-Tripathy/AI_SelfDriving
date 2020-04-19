@@ -3,7 +3,7 @@
 # 1. updating the max_env_steps to 5000 after 10000 max_stepss
 # 2. updating max_action to 5 - car doesnot move a lot mostly straight lines
 # 2.1 updating max_action to 45 - car doesnot move a lot mostly straight lines
-# 3. updating max
+# 3. updating max episode time
 # 4. other hyperparams: 1. velocity and angle updates when car in road or sand; 2. proper randomisation of actions for building buffer
 # 5. hyperparams for punishing and rewarding the agent - 
 #       done = True if self.av_r(reward) <= -0.1 else False
@@ -102,6 +102,7 @@ def get_target_image(img, angle, center, size, fill_with = 255):
 
 
 #initialise variables
+crop_dim = 60
 state_dim = 28 #state dimension is 60x60 image having car at the center with one channel for grayscale
 action_dim = 1
 latent_dim = 16
@@ -292,7 +293,7 @@ class Game(Widget):
 
                 #initialise 1st state after done, move it towards orientaation
                 self.car.angle = 0
-                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
+                self.state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
                 #print(self.state.size())
                 #print(self.state)
                 #tens = self.state.view(self.state.shape[1], self.state.shape[2])
@@ -338,7 +339,7 @@ class Game(Widget):
 
             #The agent performs the action in the environment, then reaches the next state and receives the reward
             self.car.move(action[0])
-            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], state_dim)
+            new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
             #tens = new_state.view(self.state.shape[1], self.state.shape[2])
             #plt.imshow(tens)
             #plt.show()
@@ -427,10 +428,7 @@ class Game(Widget):
                 self.p_living +=0.5
 
 
-
-
-
-            
+         
 
             #if round(abs((action - last_action))> 20:
             #   reward -= 0.2

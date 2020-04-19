@@ -167,9 +167,9 @@ class Car(Widget):
         #print(camera_data.size())
         camera_data = F.interpolate(camera_data,size=(80,80))
         #print(camera_data.size())
-        #tens = camera_data.view(camera_data.shape[2], camera_data.shape[3])
-        #plt.imshow(tens)
-        #plt.show()
+        tens = camera_data.view(camera_data.shape[2], camera_data.shape[3])
+        plt.imshow(tens)
+        plt.show()
         #print(camera_data.size())
         return camera_data.squeeze(0)
 

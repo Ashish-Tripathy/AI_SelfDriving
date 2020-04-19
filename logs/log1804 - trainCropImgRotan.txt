@@ -99,3 +99,4 @@ Steps:  96775 Episode:  98 Reward:  -935.2 Ep Steps:  1001 Distance covered:  75
 Steps:  97776 Episode:  99 Reward:  -960.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -481.5
 Steps:  98777 Episode:  100 Reward:  -961.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -482.5
 Steps:  99778 Episode:  101 Reward:  -961.2 Ep Steps:  1001 Distance covered:  49.4 Distance left:  704.46 punish by sand:  -478.7 punish living:  -482.5
+
