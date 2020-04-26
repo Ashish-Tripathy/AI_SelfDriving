@@ -79,7 +79,7 @@ orientation = 0
 
 #function to extract image and rotate
 def get_target_image(img, angle, center, size, fill_with = 255):
-    angle = angle + 90
+    angle = angle# + 90
     center[0] -= 0
     img = np.pad(img, size, 'constant', constant_values = fill_with)
     init_size = 1.6*size
@@ -202,7 +202,7 @@ class Game(Widget):
     episode_num = 0
     done = True
     t0 = time.time()
-    max_timesteps = 100000
+    max_timesteps = 200000
     state = torch.zeros([1,state_dim,state_dim]) #shape of the cropped image
     episode_reward = 0
     episode_timesteps = 0
