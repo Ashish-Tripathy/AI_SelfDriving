@@ -22,7 +22,12 @@ I started with taking the sensor concepts used with the DQN use case and convert
 
    My commit history can be checked to get better understanding of all the changes I did in my approach.
 
+### Current Progress:
 
+I have spent almost 2 weeks on this problem. I have experimented multiple strategies but have not been able successfully solve this problem yet. But with multiple discussions in the group and further research I can see light at the end of tunnel and will surely be able tackle it.
+
+[![Video](https://i9.ytimg.com/vi/5cIad8gBSAM/mq2.jpg?sqp=CNWj8vQF&rs=AOn4CLAuKJu2M0c408PRkiekaN4oKMhxoA)](https://youtu.be/5cIad8gBSAM)
+This is the picture link to the youtube video.
 
 I will only be describing my approach with CNN based TD3 and what I learnt from the exercise here.
 
@@ -62,8 +67,10 @@ In the process of solving this task, two approaches were adopted to understand w
    
 
     Cropped 60x60 image scaled to 28x28:
+    
+    <img src="https://i.imgur.com/1yeRFjG.png" width="400">
 
-<img src="https://i.imgur.com/1yeRFjG.png" style="zoom: 50%;" />
+
 
 #### Pre-training filling up Replay buffer with  transitions
 
