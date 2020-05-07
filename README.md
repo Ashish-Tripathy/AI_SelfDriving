@@ -30,6 +30,8 @@ I have experimented multiple strategies but have not been able successfully solv
 
 []: https://youtu.be/5cIad8gBSAM	"Link to the video"
 
+[](https://youtu.be/5cIad8gBSAM) "Link"
+
 I will only be describing my approach with CNN based TD3 and what I learnt from the exercise here.
 
 ### Environment and Scenario:
