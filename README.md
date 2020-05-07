@@ -28,7 +28,7 @@ I started with taking the sensor concepts used with the DQN use case and convert
 
 I have experimented multiple strategies but have not been able successfully solve this problem yet. My car currently goes from start point to both the goals without staying on the road.
 
-Link to the video: https://youtu.be/5cIad8gBSAM
+Link to the video: https://youtu.be/Nw-vB_-C9tI
 
 I will only be describing my approach with CNN based TD3 and what I learnt from the exercise here.
 
