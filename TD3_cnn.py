@@ -49,17 +49,20 @@ class Actor(nn.Module):
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
             #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 8, 3), #[16, 24,24]
+            torch.nn.Conv2d(8, 12, 3), #[16, 24,24]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 8, 1),  ## output size: [8, 10, 10]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.Conv2d(8, 12, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [8, 10, 10]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
             torch.nn.AdaptiveAvgPool2d((1, 1)),  ## output size: [16, 37, 37]
@@ -96,7 +99,7 @@ class Actor(nn.Module):
                 x = layer(x)
             #print("unclipped action: ", x)
             
-        x = self.max_action * x
+        x = self.max_action * torch.tanh(x)
         #print(x)
         return x
 		
@@ -109,22 +112,26 @@ class Critic(nn.Module):
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
             #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 8, 3), #[16, 24,24]
+            torch.nn.Conv2d(8, 12, 3), #[16, 24,24]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 8, 1),  ## output size: [8, 10, 10]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.Conv2d(8, 12, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [8, 10, 10]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.AdaptiveAvgPool2d((1, 1)),
+            torch.nn.AdaptiveAvgPool2d((1, 1)),  ## output size: [16, 37, 37]
             Flatten(),  ## output: 512
         ])
+
 
         self.linear_1 = torch.nn.ModuleList([
             torch.nn.Linear(latent_dim+2+action_dim, 16),
@@ -140,22 +147,26 @@ class Critic(nn.Module):
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
             #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 8, 3), #[16, 24,24]
+            torch.nn.Conv2d(8, 12, 3), #[16, 24,24]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(16),
+            torch.nn.Dropout2d(0.2),
+            torch.nn.Conv2d(16, 8, 1),  ## output size: [8, 10, 10]
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(8),
-            #torch.nn.Dropout2d(0.2),
-            torch.nn.Conv2d(8, 16, 3, stride = 2), #[16, 12, 12]
+            torch.nn.Conv2d(8, 12, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
+            torch.nn.ReLU(),
+            torch.nn.BatchNorm2d(12),
+            torch.nn.Conv2d(12, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),
             torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3),  ## output size: [8, 10, 10]
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.Conv2d(16, 16, 3), ##changed to 1 ## output size: [16, 8, 8] , No of filters = 16, kernel = 5, stride = 2, padding =2 
-            torch.nn.ReLU(),
-            torch.nn.BatchNorm2d(16),
-            torch.nn.AdaptiveAvgPool2d((1, 1)),
+            torch.nn.AdaptiveAvgPool2d((1, 1)),  ## output size: [16, 37, 37]
             Flatten(),  ## output: 512
         ])
+
         self.linear_2 = torch.nn.ModuleList([
             torch.nn.Linear(latent_dim+2+action_dim, 16),
             torch.nn.ReLU(),
@@ -220,11 +231,11 @@ class TD3(object):
         #print(self.actor)
         self.actor_target = Actor(state_dim, action_dim, max_action, latent_dim).to(device)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=0.005)
         self.critic = Critic(state_dim, action_dim, latent_dim).to(device)
         self.critic_target = Critic(state_dim, action_dim, latent_dim).to(device)
         self.critic_target.load_state_dict(self.critic.state_dict())
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=0.005)
         self.max_action = max_action
         
     def select_action(self, state, orientation):

@@ -8,6 +8,11 @@
 # 5. hyperparams for punishing and rewarding the agent - 
 #       done = True if self.av_r(reward) <= -0.1 else False
 
+# may01: change punishments to sand only based on counters
+# add steering angle punishments: 0.5 * angle**2
+# correct swap logic and episode completions
+# stacking rewards basedon categories ra - reward on angle, rs - reward on sand, rd - distance, rb - boundary
+
 
 
 # Importing the libraries
@@ -67,27 +72,60 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 30 #reduced to prevent steep turns
+max_action = 30#15 #reduced to prevent steep turns
 #orientation = 0
 
+#function to extract car image
+def extract_car(x, y, width, height, angle):
+        car_ = np.array([(0, 0), (width, 0), (width, height), (0, height), (0, 0)])
+        theta = (np.pi / 180.0) * angle
+        R = np.array([[np.cos(theta), -np.sin(theta)],
+                    [np.sin(theta), np.cos(theta)]])
+        car_offset = np.array([x, y])
+        cropped_car = np.dot(car_, R) + car_offset
+        return cropped_car
 #function to extract image and rotate
 def get_target_image(img, angle, center, size, fill_with = 255):
     angle = angle + 90
     center[0] -= 0
     img = np.pad(img, size, 'constant', constant_values = fill_with)
+    #plt.imshow(img)
+    #plt.show()
+
+    a_0 = center[0]
+    a_1 = center[1]
+    img_tmp = PILImage.fromarray(img)#.astype("uint8")*255)        
+    draw = ImageDraw.Draw(img_tmp)
+    extract_car_area = extract_car(x=int(a_1+80), y=int(a_0+80), width=10, height=20, angle = angle-90)#+180)
+    draw.polygon([tuple(p) for p in extract_car_area], fill=128)
+
+    
+    #plt.imshow(img_tmp)
+    #plt.show()
+
+    #plt.savefig("padded.png")
     init_size = 1.6*size
-    #print(img.shape)
+    ##print(img.shape)
     center[0] += size
     center[1] += size
+
+    img = np.asarray(img_tmp)
     #print(int(center[0]-(init_size/2)) , int(center[1]-(init_size/2)),int(center[0]+(init_size/2)) , int(center[1]+(init_size/2)))
     cropped = img[int(center[0]-(init_size/2)) : int(center[0]+(init_size/2)) ,int(center[1]-(init_size/2)): int(center[1]+(init_size/2))]
     #return cropped
+    #plt.imshow(cropped)
+    #plt.show()
+    #plt.savefig("cropped.png")
     rotated = ndimage.rotate(cropped, angle, reshape = False, cval = 255.0)
     y,x = rotated.shape
     final = rotated[int(y/2-(size/2)):int(y/2+(size/2)),int(x/2-(size/2)):int(x/2+(size/2))]
+    #plt.imshow(final)
+    #plt.show()
+    #plt.savefig("rotated.png")
     final = torch.from_numpy(np.array(final)).float().div(255)
     final = final.unsqueeze(0).unsqueeze(0)
     final = F.interpolate(final,size=(28,28))
+    ##plt.imshow(final)
     #final = final.unsqueeze(0)
 
     #print(rotated.shape)
@@ -95,7 +133,7 @@ def get_target_image(img, angle, center, size, fill_with = 255):
 
 
 #initialise variables
-crop_dim = 60
+crop_dim = 80
 state_dim = 5 #state dimension is 60x60 image having car at the center with one channel for grayscale
 action_dim = 1
 latent_dim = 16
@@ -131,9 +169,9 @@ p_sand = 0
 p_living = 0
 lp_counter = 0
 #decay expl noise every 4000 timestep
-expl_noise_vals = np.linspace(0.1, int(max_action/1000), num=int(max_timesteps/4000), endpoint=True, retstep=False, dtype=None, axis=0) # Exploration noise - STD value of exploration Gaussian noise
+expl_noise_vals = np.linspace(1, int(max_action/1000), num=int(max_timesteps/2000), endpoint=True, retstep=False, dtype=None, axis=0) # Exploration noise - STD value of exploration Gaussian noise
 reward_window = []
-
+ra,rb,rs,rd = 0,0,0,0
 # Initializing the environment
 first_update = True
 def init():
@@ -164,44 +202,16 @@ class Car(Widget):
     velocity_x = NumericProperty(0)
     velocity_y = NumericProperty(0)
     velocity = ReferenceListProperty(velocity_x, velocity_y)
-    sensor1_x = NumericProperty(0)
-    sensor1_y = NumericProperty(0)
-    sensor1 = ReferenceListProperty(sensor1_x, sensor1_y)
-    sensor2_x = NumericProperty(0)
-    sensor2_y = NumericProperty(0)
-    sensor2 = ReferenceListProperty(sensor2_x, sensor2_y)
-    sensor3_x = NumericProperty(0)
-    sensor3_y = NumericProperty(0)
-    sensor3 = ReferenceListProperty(sensor3_x, sensor3_y)
-    signal1 = NumericProperty(0)
-    signal2 = NumericProperty(0)
-    signal3 = NumericProperty(0)
+ 
 
     def move(self, rotation):
         #signals have been removed from any computaion for TD3, but are still visible
         self.pos = Vector(*self.velocity) + self.pos
         self.rotation = rotation
         self.angle = self.angle + self.rotation
-        self.sensor1 = Vector(30, 0).rotate(self.angle) + self.pos
-        self.sensor2 = Vector(30, 0).rotate(self.angle+30) + self.pos
-        self.sensor3 = Vector(30, 0).rotate(self.angle-30) + self.pos
-        self.signal1 = int(np.sum(sand[int(self.sensor1_x)-10:int(self.sensor1_x)+10, int(self.sensor1_y)-10:int(self.sensor1_y)+10]))/400.
-        self.signal2 = int(np.sum(sand[int(self.sensor2_x)-10:int(self.sensor2_x)+10, int(self.sensor2_y)-10:int(self.sensor2_y)+10]))/400.
-        self.signal3 = int(np.sum(sand[int(self.sensor3_x)-10:int(self.sensor3_x)+10, int(self.sensor3_y)-10:int(self.sensor3_y)+10]))/400.
-        if self.sensor1_x>longueur-10 or self.sensor1_x<10 or self.sensor1_y>largeur-10 or self.sensor1_y<10:
-            self.signal1 = 10.
-        if self.sensor2_x>longueur-10 or self.sensor2_x<10 or self.sensor2_y>largeur-10 or self.sensor2_y<10:
-            self.signal2 = 10.
-        if self.sensor3_x>longueur-10 or self.sensor3_x<10 or self.sensor3_y>largeur-10 or self.sensor3_y<10:
-            self.signal3 = 10.
+        
 
 
-class Ball1(Widget):
-    pass
-class Ball2(Widget):
-    pass
-class Ball3(Widget):
-    pass
 
 
 
@@ -211,9 +221,6 @@ class Ball3(Widget):
 
 class Game(Widget):
     car = ObjectProperty(None)
-    ball1 = ObjectProperty(None)
-    ball2 = ObjectProperty(None)
-    ball3 = ObjectProperty(None)
 
     def serve_car(self):
         self.car.center = self.center
@@ -257,6 +264,14 @@ class Game(Widget):
         #decay expl noise every 4000 timestep
         global expl_noise_vals
         global crop_dim
+        global ra
+        global rb
+        global rs
+        global rd
+        #global ck1x, ck2y = 1000, 400
+        #global ck2x, ck2y = 
+        # global ck3x, ck3y = 
+        # global ck4x, ck4y = 
 
 
  
@@ -283,27 +298,30 @@ class Game(Widget):
                     #print("Total Timesteps: {} Episode Num: {} Reward: {}".format(self.total_timesteps,self.episode_num, self.episode_reward))
                     distance_travelled = np.sqrt((self.car.x - 715)**2 + (self.car.y - 360)**2)
                     distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
-                    s_reward = round(float(episode_reward * p_sand/(p_sand+p_living)),2)
-                    l_reward = round(float(episode_reward * p_living/(p_sand+p_living)),2)
+                    s_reward = float(p_sand)
+                    l_reward = float(p_living)
                     #c = np.amax(sand_time)
                     #logger.info("Steps: %d , Reward: %d , Ep: %d , Ep steps: %d , Distance: %d , Distance left: %d ", self.total_timesteps,self.episode_num,self.episode_reward, self.episode_timesteps,distance_travelled,distance)
-                    #with open("./logs/log1804.txt", 'a') as f:
-                    #   sys.stdout = f
-                    #   print("Steps: ", self.total_timesteps, "Episode: ",self.episode_num, "Reward: ", self.episode_reward,"Ep Steps: ", self.episode_timesteps,"Distance covered: ", round(float(distance_travelled),2), "Distance left: ", round(float(distance),2), "punish by sand: ", s_reward, "punish living: ", l_reward)          
-                    print("Steps: ", total_timesteps, "Episode: ",episode_num, "Reward: ", episode_reward,"Ep Steps: ", episode_timesteps,"Distance covered: ", round(float(distance_travelled),2), "Distance left: ", round(float(distance),2), "punish by sand: ", s_reward, "punish living: ", l_reward)          
+                    with open("./logs/log_06may.txt", 'a') as f:
+                       sys.stdout = f
+                       print("Steps: ", total_timesteps, "Episode: ",episode_num, "Reward: ", episode_reward,"Ep Steps: ", episode_timesteps,"Distance covered: ", round(float(distance_travelled),2), "Distance left: ", round(float(distance),2), "punish by sand: ", s_reward, "punish living: ", l_reward)            
+                    #print("Steps: ", total_timesteps, "Episode: ",episode_num, "Reward: ", episode_reward,"Ep Steps: ", episode_timesteps,"Distance covered: ", round(float(distance_travelled),2), "Distance left: ", round(float(distance),2), "punish by sand: ", s_reward, "punish living: ", l_reward)          
                 if total_timesteps > start_timesteps:
                     #print("I am training for steps: ", self.episode_timesteps)
                     #start_time = time.time()
                     brain.train(replay_buffer, episode_timesteps, batch_size, discount, tau, policy_noise, noise_clip, policy_freq)
-                    print("debug")
+                    #print("debug")
                     #print("time in minutes: ", round((time.time() - start_time)/60))
                 #reset set state dimenssion elements once episode is done
                 
                 #update car position
-                self.car.x = 715 #+ np.random.normal(20,40) #for random location update
-                self.car.y = 360 #+ np.random.normal(20,40)
+                self.car.x = 850#750 #+ np.random.normal(20,40) #for random location update
+                self.car.y = 400#360 #+ np.random.normal(20,40)
                 self.car.angle = 0
                 self.car.velocity = Vector(6, 0)
+                goal_x = 1420
+                goal_y = 622
+                swap = 0
                 xx = goal_x - self.car.x
                 yy = goal_y - self.car.y
                 orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
@@ -347,9 +365,9 @@ class Game(Widget):
                 #print("earlier action:", action)
                 #exploraion noise decay, car getting stuck in the same actions needs aggressive exploration, decay atfer it has learnt something
                 #expl_noise = expl_noise_vals[int(total_timesteps/4000)]
-                print("actual action:", action)
+                #print("actual action:", action)
                 action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
-                print("noise action:", action)
+                #print("noise action:", action)
 
             #smooth action if much difference between first and next action
                 #if round(abs(float(action[0]) - float(last_action[0])))> 0.5:
@@ -362,8 +380,12 @@ class Game(Widget):
 
             if type(action) != type([]):
                 self.car.move(action.tolist()[0])
+                ra =  -0.1 * (action.tolist()[0] ** 2)
+                p_living += ra
             else:
                 self.car.move(action[0])
+                ra = -0.1 * (action[0] ** 2)
+                p_living += -ra
             distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
             #tens = new_state.view(self.state.shape[1], self.state.shape[2])
             #plt.imshow(tens)
@@ -379,19 +401,21 @@ class Game(Widget):
             if sand[int(self.car.x),int(self.car.y)] > 0:# and self.total_timesteps < start_timesteps:
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
                 sand_counter +=1
-                reward = -1
-                done = False
-                p_sand += 0.1
+                #if sand_counter>5:
+                rs = -15
+                #reward = -1
+                #done = False
+                p_sand += 15
 
             else: # otherwise
                 self.car.velocity = Vector(2, 0).rotate(self.car.angle)
                 sand_counter = 0
-                reward = -0.2 #living penalty
-                p_living += 0.1
+                rd = -10#living penalty
+                p_living += 10
 
                 if distance < last_distance:
-                    reward = 0.1
-                    p_living -= 1
+                    rd = 20
+                    p_living -= 20
         
 
 
@@ -399,24 +423,47 @@ class Game(Widget):
                 # else:
                 #     last_reward = last_reward +(-0.2)
 
+            # Ending the episodes with no results
             if (self.car.x < 5) or (self.car.x > self.width - 5) or (self.car.y < 5) or (self.car.y > self.height - 5): #crude way to handle model failing near boundaries
                 done = True
-                reward = -1
-                p_living += 1
+                rb = -30
+                #p_living += 10
+
+            if total_timesteps<=start_timesteps and episode_timesteps == 1500:
+                rb = -15
+                done = True
+            elif total_timesteps>start_timesteps and total_timesteps<=start_timesteps*3 and episode_timesteps==2000:# and episode_reward > -200:
+                rb = -15
+                done = True
+            elif total_timesteps>start_timesteps*3 and episode_timesteps == 5000:
+                rb = -15
+                done = True
+
+            
+            # rewarding destinationa covered
+            if distance < 100:
+                rd = 40    
             
             if distance < 10:
-                #reward += float(100 * (1/distance)) #0.2
-                #self.p_living -= float(100 * (1/distance))
-                reward = 1
+                #reward = 1
+                
                 if swap == 1:
                     goal_x = 1420
                     goal_y = 622
                     swap = 0
-                    #done = True
+                    with open("./logs/log_06may", 'a') as f:
+                       sys.stdout = f
+                       print("Final Destination ----- Yipeeeee")
+                    rd = 50            
+                    done = True
                 else:
                     goal_x = 9
                     goal_y = 85
                     swap = 1
+                    with open("./logs/log_06may.txt", 'a') as f:
+                       sys.stdout = f
+                       print("1st Destination ----- Yipeeeeeee")
+                    rb = 70
                     #done = True
             last_distance = distance
             new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
@@ -425,9 +472,7 @@ class Game(Widget):
             new_orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
             new_orientation = [new_orientation, -new_orientation]
             
-            self.ball1.pos = self.car.sensor1
-            self.ball2.pos = self.car.sensor2
-            self.ball3.pos = self.car.sensor3
+
 
             #additional rewards and punishments:
             
@@ -445,6 +490,8 @@ class Game(Widget):
             #if self.sand_counter > 10:
             #   reward -= 0.1
             #  self.p_sand += 0.1
+            ##if sand_counter > 20:
+
 
             distance_travelled = np.sqrt((self.car.x - 715)**2 + (self.car.y - 360)**2)
             # if distance_travelled < last_distance_travelled:
@@ -453,13 +500,7 @@ class Game(Widget):
             # if self.lp_counter == 20:
             #     reward -= 0.5
             #     self.p_living +=0.5
-            #reward_window.append(reward)
-
-            if episode_timesteps % 2500 == 0 and episode_timesteps != 0:
-                 #sum(reward_window[len(reward_window)-20:]) <= -19 or  
-                done = True
-                reward = -2
-                #reward_window = []
+            
 
          
 
@@ -467,22 +508,16 @@ class Game(Widget):
             #   reward -= 0.2
 
             #end episode if more time on sand
-            #if self.sand_counter == 200:
-             #   self.done = True
+            #if sand_counter == 20:
+             #   done = True
             
             # We increase the total reward
+
+            reward = ra + rb + rs + rd
             episode_reward += reward
 
             #end episode after some timesteps
-            # #if episode_timesteps == 500 and total_timesteps<start_timesteps:
-            #  #   reward = -1
-            #     done = True
-            # if episode_timesteps == 500 and total_timesteps>start_timesteps:# and episode_reward > -200:
-            #     reward = -1
-            #     done = True
-            # if episode_timesteps == 1000 and total_timesteps>(start_timesteps*3):
-            #     reward = -1
-            #     done = True
+
 
             sand_time.append(sand_counter) #not used
 
