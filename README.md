@@ -12,22 +12,23 @@ I started with taking the sensor concepts used with the DQN use case and convert
 
 2. Images: has all the images used in the project
 
-3. logs: It has the logs for 3 runs which were recorded, to check my progress
+3. logs: It has the logs for all the runs which were recorded, to check my progress. The final file for the submission is - 
 
-4. train_CropImgRotatn: Uses the approach of crop and rotation
+4. tain_final.py is the final file which was used for training and recording the video for the progress
 
-5. train_smoothPenalty: Uses heavy living penalty, introduces smooth action penalty
+5. train_CropImgRotatn: Uses the approach of crop and rotation
 
-6. train_FrameSkip: uses logic of frameskip to continue with a predicted action for those number of frames, and also to push transitions in replay buffer
+6. train_smoothPenalty: Uses heavy living penalty, introduces smooth action penalty
+
+7. train_FrameSkip: uses logic of frameskip to continue with a predicted action for those number of frames, and also to push transitions in replay buffer
 
    My commit history can be checked to get better understanding of all the changes I did in my approach.
 
 ### Current Progress:
 
-I have spent almost 2 weeks on this problem. I have experimented multiple strategies but have not been able successfully solve this problem yet. But with multiple discussions in the group and further research I can see light at the end of tunnel and will surely be able tackle it.
+I have experimented multiple strategies but have not been able successfully solve this problem yet. My car currently goes from start point to both the goals without staying on the road.
 
-[![Video](https://i9.ytimg.com/vi/5cIad8gBSAM/mq2.jpg?sqp=CNWj8vQF&rs=AOn4CLAuKJu2M0c408PRkiekaN4oKMhxoA)](https://youtu.be/5cIad8gBSAM)
-This is the picture link to the youtube video.
+[]: https://youtu.be/5cIad8gBSAM	"Link to the video"
 
 I will only be describing my approach with CNN based TD3 and what I learnt from the exercise here.
 
@@ -67,10 +68,10 @@ In the process of solving this task, two approaches were adopted to understand w
    
 
     Cropped 60x60 image scaled to 28x28:
-    
+   
     <img src="https://i.imgur.com/1yeRFjG.png" width="400">
 
-
+3. **Combining 1 and 2**: This is the final approach I used, I am drawing the car as well on the cropped and rotated road
 
 #### Pre-training filling up Replay buffer with  transitions
 
@@ -84,9 +85,8 @@ In the process of solving this task, two approaches were adopted to understand w
 
 #### Network architecture
 
-1. Deciding on cnn architecture: started with very heavy architecture for baseline, slowly streamlined the architecture. For the *drawing car* approach used bottlenecks to understand car pattern. 
-2. For *rotation* approach kept making the architecture lighter, major reason was to have my cnn learn faster as the patterns were not very complex.
-3. Final architecture: (8, 3x3, Relu, BN), (16, 3x3, Relu, BN), (16, 3x3, stride=2, Relu, BN), (8, 3x3, Relu, BN), (16, 3x3, Relu, BN), (GAP),  Flatten, Dense layer of latent dim 16 to 30 to action_dim* - refer code archives and push history for details of the architectures tried
+1. Deciding on cnn architecture: started with very heavy architecture for baseline, slowly streamlined the architecture. Finally went ahead with a simple architecture which gave me 99% accuracy on MNIST under 20 epochs
+2. (8, 3x3, Relu, BN), (12, 3x3, Relu, BN), (16, 3x3, stride=2, Relu, BN), (8, 1x1, Relu, BN), (12, 3x3, Relu, BN), (16, 3x3, Relu, BN), (AdaptiveAveragePool),  Flatten, Dense layer of latent dim 16 to 8 to action_dim* - refer code archives and push history for details of the architectures tried
 
 #### Implementation details
 
@@ -108,29 +108,23 @@ My major work spent in this exercise was testing variety of reward combinations 
 
    To combat this we worked on Living penalty or penalizing the agent for being on the road but not moving towards the target.
 
-   4. Reward as a function of distance left from the goal, lesser the distance more the reward
-
-   5. Penalizing consecutive actions with very heavy or similar rotation with some threshold
-
-      I also tested with smoothening actions returned by the model by taking an average of current action and last action. They did help in reducing the rotation angles but the car was still rotating making bigger circles.
-
-   6. Penalizing every step where the distance travelled from the initial step was less than the previous distance
-
-   7. I also added another smoothening penalty for heavy steering angles. This idea was derived from https://arxiv.org/pdf/1904.09503.pdf 
-
 3. Based on the discussion in the forum, I decided to monitor sand penalty vs living penalty to check if my sand penalty is overshadowing the living penalty. With some ideas checking the logs, i figured out that my sand penalty is high compared to my living penalty. I decided to increase living penalty based on the  counter of number of rotation the car was taking. I plotted the penalties after running for 100,000 steps. 
 
-   ![plot](https://i.imgur.com/ngDEj0I.png)
+![plot](https://i.imgur.com/ngDEj0I.png)
 
-I reduced the sand penalty values and increased living penalty value but they also did not help in improvement of the performance of the agent. 
 
-I added more penalty with the new smoothening penalty for heavy steering angle. Below is the plot describing the penalties for this run:
 
-![](https://i.imgur.com/imfSPJt.png)
+**Final Reward strategy:**
 
-My smoothening penalty did add excess living penalty, the results were the car was going more in the sand. I was not able to balance it effectively.
+for each step, reward = rs + rd + rb + ra
 
-I have to work on this.
+**rs** = -15 reward, the agent was punished by 10 points after every 5 continuous steps on the sand
+
+**rd** = +20 reward when last covered distance from the goal< the current covered distance in the step; -10 for living penalty, +40 when only 100 distance units left to the goal, +50 when covered first goal, +70 when covered final goal
+
+**rb** = -30 when the agent slammed on the boundaries
+
+**ra** = -0.1*(action^2), agent penalised for steep steering angles, to come out of rotation frenzy and smooth driving
 
 
 
@@ -141,21 +135,28 @@ Experimented with very aggressive episode completions with very specific episode
 1. Sand counter episode completions - finished episodes very quickly, episode completions confused agent about whether episode completed 
 2. Max episode steps completions - difficult hyper parameter to set, as with more value, the training iterations increase a lot and as noticed with many timesteps nothing was learnt
 3. I tried with having episode completion only when the agent closes to the boundary or the goal. But these led to car going in rotation frenzy for eternity in the initial trained steps.
-4. My final submission is based on the following episode done strategy:
-   1. ​      if episode steps == 1000 and total steps<10,000
-   2. ​      if episode steps == 1000 and total steps<30,000
-   3. ​      if episode steps == 5000 and total steps>10,000
-5. Episode completion had a punishment attached to it, to penalize where goal was not reached but episode finished
+
+**Final Strategy**:
+
+My final submission is based on the following episode done strategy:
+
+1. ​      if episode steps == 1500 and total steps<10,000
+2. ​      if episode steps == 2000 and total steps<30,000
+3. ​      if episode steps == 5000 and total steps>30,000
+4. ​      Hitting the boundaries
+5. ​      Reached both the goals
+
+Episode completion had a punishment attached to it, to penalize where goal was not reached but episode finished and reward if reached successfully
 
 <u>**Exploration Noise Strategy**</u>
 
-To enable more exploration for the model, I decided to decay exploration noise linearly every 4000 steps. This exploration noise value was used as standard deviation to generate a random value from the normal distribution.
+To enable more exploration for the model, I decided to decay exploration noise linearly every 2000 steps. This exploration noise value was used as standard deviation to generate a random value from the normal distribution.
 
 
 
 <u>**Other Hyperparameters**</u>
 
-1. Max action: I started with a very high max action of 90 to suggest 90 degrees, I tested it for lower values. I finally settled on a 5 as the value, to reduce the steering angles.
+1. Max action: I started with a very high max action of 90 to suggest 90 degrees, I tested it for lower values. I finally settled on 30 as the value, to reduce the steering angles.
 
 2. Episode timesteps
 3. sand counter: deciding how much we can travel on sand
@@ -165,27 +166,25 @@ To enable more exploration for the model, I decided to decay exploration noise l
 
 These were all implemented for experimentation and learning how we can better teach the car to learn. Some of these were made inactive for trying different scenarios or concepts at different times.
 
-### Next steps:
 
-Sometimes my car progressed and covered distance of almost 300-400 steps, but I noticed once it started going into rotations with minimal distance travel, it was very difficult for it to come out of it. Even the heavy living penalties did not help me much.
 
-This will be my strategy going forward:
+## Learnings:
 
-1.  I have already prepared a very basic road for my car (easymask.png in Images folder), and I will work towards making it move on that road. A strategy discussed in the discussion forum where we were asked to break the problem into a smaller problem and then use it to tackle on the actual map
+I work as a Data Scientist but my job usually deals with structured data. This exercise taught me multiple aspects of software engineering for a complex problem like  self driving a car on a specified road using a novel RL algorithms which has not been much tested on similar problem or documented as algorithms like DQN.
 
-2. Need to understand how to effectively check why the car starts going in roundabout circle. I checked my cnn architecture, the images that go into it, but many times the values from Tan are very close to 1 or -1. We need to understand what is my CNN learning from the images. This will be the first thing i need to understand.
+Great discussions with peer and understanding how they are attacking the problem
 
-3. Also From the discussion forum, I have the idea to not backprop the conv layer, use it for creating embeddings for the image and train the Fc layers only for actor-critic.
+Brainstorming on the rewards, punishment part was really awesome.
 
-4. With this I will be able to decide on a strategy for episode completions correctly
+I would have been happier if it started to move on the road but my understanding is I am missing something very trivial still and of course there is no excuse:)
 
-5. Decide on a proper reward strategy with more experiments. Run more timesteps and plot penalties to see what is taking more contribution towards rewards
 
-6. Stacking frames and passing to cnn, theoretically should improve my learning from CNN. Need to check that.
 
-   
 
-   
+
+
+
+
 
 
 
