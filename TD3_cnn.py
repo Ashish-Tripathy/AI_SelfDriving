@@ -34,7 +34,6 @@ class ReplayBuffer(object):
         return np.array(batch_states), np.array(batch_next_states),np.array(batch_orientation), np.array(batch_next_orientation), np.array(batch_actions), np.array(batch_rewards).reshape(-1, 1), np.array(batch_dones).reshape(-1, 1)
 
 
-# TD3(1, 1, 10, 1024)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 class Flatten(torch.nn.Module):
@@ -44,6 +43,7 @@ class Flatten(torch.nn.Module):
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, max_action, latent_dim):
         super(Actor, self).__init__()
+        #model hit 99% accuracy on mnist within 20 epochs
         self.encoder = torch.nn.ModuleList([  ## input size:[192, 192]
             torch.nn.Conv2d(1, 8, 3), ##changed to 1 ## output size: [8, 26, 26] , No of filters = 16, kernel = 5, stride = 2, padding =2 
             torch.nn.ReLU(),

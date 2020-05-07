@@ -31,8 +31,17 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import torch.nn.functional as F
-#from torchvision import transforms
 import math
+from PIL import Image as PILImage
+from kivy.graphics.texture import Texture
+from PIL import ImageDraw
+import cv2
+from scipy import ndimage
+from PIL import Image
+import scipy
+
+import logging 
+import sys
 
 
 # Importing the Kivy packages
@@ -45,19 +54,11 @@ from kivy.properties import NumericProperty, ReferenceListProperty, ObjectProper
 from kivy.vector import Vector
 from kivy.clock import Clock
 from kivy.core.image import Image as CoreImage
-from PIL import Image as PILImage
 from kivy.graphics.texture import Texture
-from PIL import ImageDraw
-# Importing the Dqn object from our AI in ai.py
-#rom ai import Dqn
-from TD3_cnn import TD3, ReplayBuffer
-import cv2
-from scipy import ndimage
-from PIL import Image
-import scipy
 
-import logging 
-import sys
+# Importing the TD3 object from our AI in TD3_cnn.py
+from TD3_cnn import TD3, ReplayBuffer
+
 
 
 # Adding this line if we don't want the right click to put a red point
@@ -72,8 +73,46 @@ last_x = 0
 last_y = 0
 n_points = 0
 length = 0
-max_action = 30#15 #reduced to prevent steep turns
-#orientation = 0
+
+#Inititalising global variables
+max_action = 30                                 #15 #reduced to prevent steep turns
+crop_dim = 80                                   #dimension to crop the image from the entire sand
+state_dim = 5                                   #state dimension is 80x80 image having car at the center with one channel for grayscale
+action_dim = 1                                  #action is just the rotation
+latent_dim = 16                                 #latent dimension for dense networks
+t0 = time.time()
+state = torch.zeros([1,state_dim,state_dim])    #shape of the cropped image
+episode_reward = 0                              #reward for entire episode - adds every reward on each step
+episode_timesteps = 0                           #number of steps in an episode
+total_timesteps = 0                             #total number of steps taken by the agent at any point        
+episode_num = 0                                 #number of episodes
+done = True                                     #episode done flag
+sand_counter = 0                                #counts number of steps on the sand
+p_sand = 0                                      #adds punishment by sand per episode
+p_living = 0                                    #adds living punishments or penalties per episode
+expl_noise_vals = np.linspace(1, int(max_action/1000), num=int(max_timesteps/2000), endpoint=True, retstep=False, dtype=None, axis=0) ##decay expl noise every 2000 timestep; Exploration noise - STD value of exploration Gaussian noise
+expl_noise = 0.4                                # exploration noise initialisation
+ra,rb,rs,rd = 0,0,0,0                           #Rewards: ra = steering angle, rb = boundary, rs = sand, rd = distance based
+im = CoreImage("./images/MASK1.png")
+mask = cv2.imread('./images/mask.png',0)
+last_distance = 0                               #distance covered in the last step
+
+
+#initialising variables for training:
+brain = TD3(state_dim,action_dim,max_action,latent_dim) #initialising the AI
+replay_buffer = ReplayBuffer()                          #Initialising the replay buffer
+seed = 0                                                # Random seed number
+eval_freq = 5e3                                         # How often the evaluation step is performed (after how many timesteps)
+max_timesteps = 500000                                  # Total number of iterations/timesteps
+save_models = True                                      # Boolean checker whether or not to save the pre-trained model
+start_timesteps = 10000                                 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
+batch_size = 30                                         # Size of the batch
+discount = 0.99                                         # Discount factor gamma, used in the calculation of the total discounted reward
+tau = 0.005                                             # Target network update rate
+policy_noise = 0.2                                      # STD of Gaussian noise added to the actions for the exploration purposes
+noise_clip = 0.5                                        # Maximum value of the Gaussian noise added to the actions (policy)
+policy_freq = 2                                         # Number of iterations to wait before the policy network (Actor model) is updated
+
 
 #function to extract car image
 def extract_car(x, y, width, height, angle):
@@ -89,89 +128,31 @@ def get_target_image(img, angle, center, size, fill_with = 255):
     angle = angle + 90
     center[0] -= 0
     img = np.pad(img, size, 'constant', constant_values = fill_with)
-    #plt.imshow(img)
-    #plt.show()
-
     a_0 = center[0]
     a_1 = center[1]
     img_tmp = PILImage.fromarray(img)#.astype("uint8")*255)        
     draw = ImageDraw.Draw(img_tmp)
     extract_car_area = extract_car(x=int(a_1+80), y=int(a_0+80), width=10, height=20, angle = angle-90)#+180)
     draw.polygon([tuple(p) for p in extract_car_area], fill=128)
-
-    
+    #debug
     #plt.imshow(img_tmp)
     #plt.show()
-
-    #plt.savefig("padded.png")
     init_size = 1.6*size
-    ##print(img.shape)
     center[0] += size
     center[1] += size
-
     img = np.asarray(img_tmp)
     #print(int(center[0]-(init_size/2)) , int(center[1]-(init_size/2)),int(center[0]+(init_size/2)) , int(center[1]+(init_size/2)))
     cropped = img[int(center[0]-(init_size/2)) : int(center[0]+(init_size/2)) ,int(center[1]-(init_size/2)): int(center[1]+(init_size/2))]
-    #return cropped
-    #plt.imshow(cropped)
-    #plt.show()
-    #plt.savefig("cropped.png")
     rotated = ndimage.rotate(cropped, angle, reshape = False, cval = 255.0)
     y,x = rotated.shape
     final = rotated[int(y/2-(size/2)):int(y/2+(size/2)),int(x/2-(size/2)):int(x/2+(size/2))]
-    #plt.imshow(final)
-    #plt.show()
-    #plt.savefig("rotated.png")
     final = torch.from_numpy(np.array(final)).float().div(255)
     final = final.unsqueeze(0).unsqueeze(0)
     final = F.interpolate(final,size=(28,28))
-    ##plt.imshow(final)
-    #final = final.unsqueeze(0)
-
     #print(rotated.shape)
     return final.squeeze(0)
 
 
-#initialise variables
-crop_dim = 80
-state_dim = 5 #state dimension is 60x60 image having car at the center with one channel for grayscale
-action_dim = 1
-latent_dim = 16
-brain = TD3(state_dim,action_dim,max_action,latent_dim)
-replay_buffer = ReplayBuffer()
-last_reward = 0
-scores = []
-im = CoreImage("./images/MASK1.png")
-mask = cv2.imread('./images/mask.png',0)
-#initialising variables for training:
-seed = 0 # Random seed number
-eval_freq = 5e3 # How often the evaluation step is performed (after how many timesteps)
-max_timesteps = 500000 # Total number of iterations/timesteps
-save_models = True # Boolean checker whether or not to save the pre-trained model
-start_timesteps = 10000 # Number of iterations/timesteps before which the model randomly chooses an action, and after which it starts to use the policy network
-batch_size = 30 # Size of the batch
-discount = 0.99 # Discount factor gamma, used in the calculation of the total discounted reward
-tau = 0.005 # Target network update rate
-policy_noise = 0.2 # STD of Gaussian noise added to the actions for the exploration purposes
-noise_clip = 0.5 # Maximum value of the Gaussian noise added to the actions (policy)
-policy_freq = 2 # Number of iterations to wait before the policy network (Actor model) is updated
-expl_noise = 0.4
-total_timesteps = 0
-episode_num = 0
-done = True
-t0 = time.time()
-#max_timesteps = 100000
-state = torch.zeros([1,state_dim,state_dim]) #shape of the cropped image
-episode_reward = 0
-episode_timesteps = 0
-sand_counter = 0
-p_sand = 0
-p_living = 0
-lp_counter = 0
-#decay expl noise every 4000 timestep
-expl_noise_vals = np.linspace(1, int(max_action/1000), num=int(max_timesteps/2000), endpoint=True, retstep=False, dtype=None, axis=0) # Exploration noise - STD value of exploration Gaussian noise
-reward_window = []
-ra,rb,rs,rd = 0,0,0,0
 # Initializing the environment
 first_update = True
 def init():
@@ -190,8 +171,6 @@ def init():
     swap = 0
 
 
-# Initializing the last distance
-last_distance = 0
 
 
 # Creating the car class
@@ -210,12 +189,6 @@ class Car(Widget):
         self.rotation = rotation
         self.angle = self.angle + self.rotation
         
-
-
-
-
-
-
 
 # Creating the game class
 
@@ -314,9 +287,9 @@ class Game(Widget):
                     #print("time in minutes: ", round((time.time() - start_time)/60))
                 #reset set state dimenssion elements once episode is done
                 
-                #update car position
-                self.car.x = 850#750 #+ np.random.normal(20,40) #for random location update
-                self.car.y = 400#360 #+ np.random.normal(20,40)
+                #update car position and state
+                self.car.x = 850 #750 #+ np.random.normal(20,40) #for random location update
+                self.car.y = 400 #360 #+ np.random.normal(20,40)
                 self.car.angle = 0
                 self.car.velocity = Vector(6, 0)
                 goal_x = 1420
@@ -325,25 +298,10 @@ class Game(Widget):
                 xx = goal_x - self.car.x
                 yy = goal_y - self.car.y
                 orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
-                orientation = [orientation, -orientation]
-
-                #initialise 1st state after done, move it towards orientaation
-                
+                orientation = [orientation, -orientation]         
                 state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
-                #print(self.state.size())
-                #print(self.state)
-                #tens = self.state.view(self.state.shape[1], self.state.shape[2])
-                #plt.imshow(tens)
-                #plt.show()
-                #or self.state = self.car.move(0)
-
-                #print("from update: ",self.state)
-                #print(self.state.size())
-                #print(orientation)
                 # Set the Done to False
                 done = False
-                last_action = [0]
-                last_distance_travelled = 0
                 # Set rewards and episode timesteps to zero
                 episode_reward = 0
                 episode_timesteps = 0
@@ -352,60 +310,39 @@ class Game(Widget):
                 lp_Counter = 0
                 p_living = 0
                 p_sand = 0
+            
             # Before 10000 timesteps, we play random actions based on uniform distn
             if total_timesteps < start_timesteps:
-                action = [random.uniform(-max_action * 1.0, max_action * 1.0)]
+                action = [random.uniform(-max_action, max_action)]
                 
             else:
-            ##debug:
-            #if self.total_timesteps == 10500:
-            #   print("check")
-            #else: # After 10000 timesteps, we switch to the model
                 action = brain.select_action(state, np.array(orientation))
-                #print("earlier action:", action)
                 #exploraion noise decay, car getting stuck in the same actions needs aggressive exploration, decay atfer it has learnt something
-                #expl_noise = expl_noise_vals[int(total_timesteps/4000)]
-                #print("actual action:", action)
+                expl_noise = expl_noise_vals[int(total_timesteps/2000)]
                 action = (action + np.random.normal(0, expl_noise)).clip(-max_action, max_action)
-                #print("noise action:", action)
-
-            #smooth action if much difference between first and next action
-                #if round(abs(float(action[0]) - float(last_action[0])))> 0.5:
-                #   action[0] = (action[0] + last_action[0]) / 2
-            
-
-            #The agent performs the action in the environment, then reaches the next state and receives the reward
-            #debug
 
 
+            # agent takes the step based on the action calculated
             if type(action) != type([]):
                 self.car.move(action.tolist()[0])
-                ra =  -0.1 * (action.tolist()[0] ** 2)
+                ra =  -0.1 * (action.tolist()[0] ** 2) #steering angle reward
                 p_living += ra
             else:
                 self.car.move(action[0])
                 ra = -0.1 * (action[0] ** 2)
                 p_living += -ra
+            
+            #calculate distance left from the goal with the step taken
             distance = np.sqrt((self.car.x - goal_x)**2 + (self.car.y - goal_y)**2)
-            #tens = new_state.view(self.state.shape[1], self.state.shape[2])
-            #plt.imshow(tens)
-            #plt.show()
             
-            #set new_state dimenssion elements
-           
-            
-            sand_time = []
             
             # evaluating reward and done
-            
             if sand[int(self.car.x),int(self.car.y)] > 0:# and self.total_timesteps < start_timesteps:
                 self.car.velocity = Vector(0.5, 0).rotate(self.car.angle)
                 sand_counter +=1
-                #if sand_counter>5:
-                rs = -15
-                #reward = -1
-                #done = False
-                p_sand += 15
+                if sand_counter>5:
+                    rs = -15
+                    p_sand += 15
 
             else: # otherwise
                 self.car.velocity = Vector(2, 0).rotate(self.car.angle)
@@ -418,17 +355,12 @@ class Game(Widget):
                     p_living -= 20
         
 
-
-
-                # else:
-                #     last_reward = last_reward +(-0.2)
-
-            # Ending the episodes with no results
+            # Ending the episodes on the boundaries
             if (self.car.x < 5) or (self.car.x > self.width - 5) or (self.car.y < 5) or (self.car.y > self.height - 5): #crude way to handle model failing near boundaries
                 done = True
                 rb = -30
-                #p_living += 10
-
+            
+            #Ending episodes when it clocks max steps
             if total_timesteps<=start_timesteps and episode_timesteps == 1500:
                 rb = -15
                 done = True
@@ -464,67 +396,23 @@ class Game(Widget):
                        sys.stdout = f
                        print("1st Destination ----- Yipeeeeeee")
                     rb = 70
-                    #done = True
+
+            
+            #set new_state dimension elements
             last_distance = distance
             new_state = get_target_image(mask, self.car.angle, [self.car.x, self.car.y], crop_dim)
             xx = goal_x - self.car.x
             yy = goal_y - self.car.y
             new_orientation = Vector(*self.car.velocity).angle((xx,yy))/180.
             new_orientation = [new_orientation, -new_orientation]
-            
-
-
-            #additional rewards and punishments:
-            
-            ##add punishment if sand touched before 10 timesteps
-            #if episode_timesteps < 10 and sand_counter == 1:
-             #   reward -= 0.2
-              #  self.p_sand += 0.2
-
-            #punish roundabout circles
-            #if abs(float(action[0]) - float(last_action[0]))/max_action < 0.2:
-             #   reward -= 0.5
-                #self.p_living += 0.5
-
-            #punish staying on sand incrementally
-            #if self.sand_counter > 10:
-            #   reward -= 0.1
-            #  self.p_sand += 0.1
-            ##if sand_counter > 20:
-
-
             distance_travelled = np.sqrt((self.car.x - 715)**2 + (self.car.y - 360)**2)
-            # if distance_travelled < last_distance_travelled:
-            #     self.lp_counter += 1
 
-            # if self.lp_counter == 20:
-            #     reward -= 0.5
-            #     self.p_living +=0.5
-            
-
-         
-
-            #if round(abs((action - last_action))> 20:
-            #   reward -= 0.2
-
-            #end episode if more time on sand
-            #if sand_counter == 20:
-             #   done = True
-            
-            # We increase the total reward
-
+            #total reward
             reward = ra + rb + rs + rd
             episode_reward += reward
 
-            #end episode after some timesteps
-
-
-            sand_time.append(sand_counter) #not used
-
-
             # We store the new transition into the Experience Replay memory (ReplayBuffer)
             replay_buffer.add((state, new_state, orientation, new_orientation, action, reward, done))
-            #print(self.state, new_state, action, reward, self.done)
             state = new_state
             orientation = new_orientation
             episode_timesteps += 1
